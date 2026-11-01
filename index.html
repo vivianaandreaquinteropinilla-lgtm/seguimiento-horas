@@ -1,0 +1,2051 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seguimiento Mesa de Soporte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+[hidden]{display:none!important}
+html{color-scheme:light}
+body{margin:0}
+img{max-width:100%}
+/* Layout: barra superior navy con pestañas; filtros en una fila; resumen arriba, detalle abajo en paneles de dos columnas que se apilan en móvil */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --surface-2:#eef1f6; --line:#dde2eb; --line-strong:#c4ccda;
+  --fg:#141b2b; --fg-2:#4a5468; --fg-3:#6f788b;
+  --navy:#16264a; --navy-2:#24396b; --on-navy:#f2f5fb; --on-navy-2:#b9c4dc;
+  --accent:#24396b; --accent-soft:#e3e9f5;
+  --ok:#1b7f4b; --ok-bg:#e1f3e8; --warn:#9a6200; --warn-bg:#fbefd5; --bad:#b4302f; --bad-bg:#fbe3e2;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#6250d6;
+  --meta:#b6bfcf;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Public Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1420; --surface:#171e2d; --surface-2:#1e2738; --line:#2a3447; --line-strong:#3a465d;
+  --fg:#e9edf5; --fg-2:#b3bccd; --fg-3:#8a94a8;
+  --navy:#0b1426; --navy-2:#1a2a4d; --on-navy:#eef2fa; --on-navy-2:#9fadc9;
+  --accent:#9bb3e6; --accent-soft:#22314f;
+  --ok:#5fcf8f; --ok-bg:#163527; --warn:#f0b54a; --warn-bg:#3a2c10; --bad:#f08482; --bad-bg:#3d1c1d;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#9085e9;
+  --meta:#4a566d; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0f1420; --surface:#171e2d; --surface-2:#1e2738; --line:#2a3447; --line-strong:#3a465d;
+  --fg:#e9edf5; --fg-2:#b3bccd; --fg-3:#8a94a8;
+  --navy:#0b1426; --navy-2:#1a2a4d; --on-navy:#eef2fa; --on-navy-2:#9fadc9;
+  --accent:#9bb3e6; --accent-soft:#22314f;
+  --ok:#5fcf8f; --ok-bg:#163527; --warn:#f0b54a; --warn-bg:#3a2c10; --bad:#f08482; --bad-bg:#3d1c1d;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#9085e9;
+  --meta:#4a566d; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--navy)}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+/* Header */
+header.top{background:var(--navy);color:var(--on-navy);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.top-inner{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding-block:12px 0}
+.brand{display:flex;flex-direction:column;gap:0;padding-bottom:10px;min-width:0}
+.brand h1{font-size:19px;color:var(--on-navy)}
+.brand span{font-size:12px;color:var(--on-navy-2);letter-spacing:.02em}
+nav.tabs{display:flex;gap:2px;margin-left:auto;overflow-x:auto;max-width:100%}
+nav.tabs button{background:none;border:0;color:var(--on-navy-2);padding:10px 14px 12px;cursor:pointer;font-weight:600;font-size:13.5px;border-bottom:3px solid transparent;white-space:nowrap}
+nav.tabs button:hover{color:var(--on-navy)}
+nav.tabs button[aria-selected="true"]{color:var(--on-navy);border-bottom-color:var(--on-navy)}
+
+main{padding-block:20px 48px;display:flex;flex-direction:column;gap:18px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0}
+.panel h2{font-size:17px}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.panel-head p{margin:2px 0 0;color:var(--fg-3);font-size:12.5px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+@media (max-width:860px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.muted{color:var(--fg-3)}
+.small{font-size:12.5px}
+
+/* Filters */
+.filters{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label,.lbl{font-size:11.5px;font-weight:600;color:var(--fg-2);text-transform:uppercase;letter-spacing:.06em}
+input[type=date],input[type=number],input[type=text],input[type=email],input[type=password],select,textarea{background:var(--surface);border:1px solid var(--line-strong);border-radius:7px;padding:7px 10px;min-height:36px;max-width:100%}
+textarea{min-height:60px;resize:vertical}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden;flex-wrap:wrap}
+.seg button{border:0;background:var(--surface);padding:7px 11px;cursor:pointer;font-size:13px;color:var(--fg-2);border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--fg);font-weight:600}
+.btn{border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600;font-size:13.5px}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--navy-2);border-color:var(--navy-2);color:var(--on-navy)}
+.btn.primary:hover{filter:brightness(1.12)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.sm{padding:4px 10px;font-size:12.5px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.linkbtn{background:none;border:0;color:var(--accent);cursor:pointer;font-weight:600;padding:0;font-size:12.5px}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+@media (max-width:980px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:560px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi .k-l{font-size:11.5px;font-weight:600;color:var(--fg-3);text-transform:uppercase;letter-spacing:.06em}
+.kpi .k-v{font-family:var(--display);font-size:28px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums}
+.kpi .k-s{font-size:12px;color:var(--fg-3)}
+
+/* Tables */
+.tbl-wrap{overflow-x:auto;margin-inline:-4px;padding-inline:4px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{text-align:left;font-size:11.5px;font-weight:600;color:var(--fg-3);text-transform:uppercase;letter-spacing:.05em;padding:8px 10px;border-bottom:1px solid var(--line-strong);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{color:var(--fg)}
+th .arr{opacity:.7}
+.wrapcell{min-width:180px;max-width:340px}
+.who{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;background:var(--c)}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.chip.bad{background:var(--bad-bg);color:var(--bad)}
+.chip.na{background:var(--surface-2);color:var(--fg-3)}
+.meter{position:relative;height:8px;background:var(--surface-2);border-radius:4px;min-width:90px;overflow:hidden}
+.meter i{position:absolute;inset:0 auto 0 0;border-radius:4px;background:var(--fg-3)}
+.meter.ok i{background:var(--ok)} .meter.warn i{background:var(--warn)} .meter.bad i{background:var(--bad)}
+.meter b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--fg-2)}
+.pctcell{display:flex;align-items:center;gap:10px;min-width:150px}
+.tbl-dia thead th{position:sticky;top:0;background:var(--surface);z-index:1}
+.tbl-dia td.c-low{color:var(--warn);font-weight:600}
+.tbl-dia td.c-zero{color:var(--bad);font-weight:600}
+.tbl-dia tr.sat td{background:var(--surface-2)}
+.tbl-dia tr.fest td{color:var(--fg-3)}
+.tbl-dia tfoot td{border-top:1px solid var(--line-strong);font-weight:700}
+.tbl-dia .nv{display:block;font-size:11px;font-weight:500;color:var(--fg-3);white-space:nowrap}
+.pctcell .num{min-width:46px;text-align:right;font-weight:600}
+
+.chart-box{position:relative;height:280px}
+.chart-box.tall{height:340px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0 0 8px;font-size:12.5px;color:var(--fg-2)}
+.legend .sw{width:12px;height:12px;border-radius:3px;background:var(--c);display:inline-block;margin-right:6px;vertical-align:-1px}
+.legend .ln{width:16px;height:0;border-top:2px dashed var(--fg-3);display:inline-block;margin-right:6px;vertical-align:3px}
+
+.banner{border:1px solid var(--line-strong);background:var(--accent-soft);border-radius:var(--r);padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.banner.warn{background:var(--warn-bg);border-color:var(--warn)}
+.empty{text-align:center;padding:36px 16px;color:var(--fg-2);display:flex;flex-direction:column;align-items:center;gap:10px}
+.empty h3{font-size:18px;color:var(--fg)}
+.empty p{max-width:52ch;margin:0}
+
+/* Forms */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px 14px}
+.form-grid .full{grid-column:1/-1}
+.form-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.status{font-size:13px;color:var(--fg-2)}
+.status.ok{color:var(--ok)} .status.bad{color:var(--bad)}
+.radio-row{display:flex;gap:14px;align-items:center;min-height:36px;flex-wrap:wrap}
+.radio-row label{display:flex;gap:6px;align-items:center;font-size:13.5px;text-transform:none;letter-spacing:0;font-weight:500;color:var(--fg)}
+.switch{display:flex;gap:10px;align-items:flex-start;font-size:13.5px}
+.switch input{margin-top:3px}
+
+.drop{border:2px dashed var(--line-strong);border-radius:var(--r);padding:28px 16px;text-align:center;background:var(--surface-2);cursor:pointer;display:flex;flex-direction:column;gap:6px;align-items:center}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop strong{font-size:15px}
+
+.colab-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+@media (max-width:560px){.colab-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.swatches{display:flex;gap:6px}
+.swatches button{width:22px;height:22px;border-radius:50%;border:2px solid transparent;background:var(--c);cursor:pointer;padding:0}
+.swatches button[aria-pressed="true"]{border-color:var(--fg);box-shadow:0 0 0 2px var(--surface) inset}
+.festivos{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px 16px;font-size:13px}
+.festivos div{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--line)}
+.festivos .x{background:none;border:0;color:var(--bad);cursor:pointer;font-size:16px;line-height:1;padding:2px 6px;border-radius:4px}
+.festivos .x:hover{background:var(--bad-bg)}
+.help{font-size:12.5px;color:var(--fg-3);margin:4px 0 0;max-width:70ch}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;font-size:13.5px;z-index:20;max-width:calc(100% - 32px)}
+@media (prefers-reduced-motion:no-preference){.toast{animation:up .2s ease-out}@keyframes up{from{opacity:0;transform:translate(-50%,8px)}}}
+
+/* Acceso */
+#auth{position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px));overflow:auto}
+#auth .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px}
+#auth .card h2{font-size:20px}
+#auth .card .marca{display:flex;align-items:center;gap:10px;color:var(--fg-2);font-size:12.5px}
+#auth .card .marca b{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--navy-2)}
+#auth form{display:flex;flex-direction:column;gap:12px}
+#auth input{width:100%}
+.who-box{display:flex;align-items:center;gap:10px;color:var(--on-navy-2);font-size:12.5px;padding-bottom:10px;flex-wrap:wrap}
+.who-box b{color:var(--on-navy);font-weight:600}
+.who-box button{background:none;border:1px solid var(--on-navy-2);color:var(--on-navy);border-radius:6px;padding:3px 9px;font-size:12px;cursor:pointer}
+.who-box button:hover{background:var(--navy-2)}
+.temp-pass{font-family:ui-monospace,Consolas,monospace;font-size:15px;background:var(--surface-2);border:1px dashed var(--line-strong);padding:4px 10px;border-radius:6px;user-select:all}
+
+/* Informe PDF: se captura el tablero con un ancho fijo y sin barras de desplazamiento internas */
+body.pdf-mode #view-dash{width:1240px;max-width:none}
+body.pdf-mode .pctcell{min-width:120px}
+body.pdf-mode,body.pdf-mode *{font-variant-numeric:normal!important}
+body.pdf-mode .tbl-wrap{max-height:none!important;overflow:visible!important}
+body.pdf-mode #cli-q,body.pdf-mode #cli-more{display:none}
+.pdf-head{background:var(--navy);color:var(--on-navy);border-radius:var(--r);padding:20px 24px;display:flex;justify-content:space-between;gap:24px;align-items:flex-end}
+.pdf-head h2{font-size:22px;color:var(--on-navy)}
+.pdf-head p{margin:4px 0 0;color:var(--on-navy-2);font-size:13px}
+.pdf-head .meta{text-align:right;font-size:12.5px;color:var(--on-navy-2);line-height:1.6}
+.pdf-head .meta b{color:var(--on-navy)}
+</style>
+</head>
+<body>
+
+
+<header class="top">
+  <div class="wrap top-inner">
+    <div class="brand"><h1>Seguimiento Mesa de Soporte</h1><span>Horas reportadas en el CRM, novedades y requerimientos</span></div>
+    <div class="who-box" id="who" hidden><span>Sesión: <b id="who-name"></b> · <span id="who-rol"></span></span><button type="button" id="btn-clave">Cambiar contraseña</button><button type="button" id="btn-salir">Salir</button></div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" id="tab-dash" aria-selected="true" data-tab="dash">Tablero</button>
+      <button role="tab" id="tab-nov" aria-selected="false" data-tab="nov">Novedades</button>
+      <button role="tab" id="tab-sab" aria-selected="false" data-tab="sab">Sábados</button>
+      <button role="tab" id="tab-carga" aria-selected="false" data-tab="carga">Cargar CRM</button>
+      <button role="tab" id="tab-cfg" aria-selected="false" data-tab="cfg">Configuración</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+<main>
+  <div id="conn-banner" class="banner warn" hidden><span id="conn-msg">Conectando con la base de datos…</span></div>
+  <div id="ro-banner" class="banner" hidden><span>Tienes acceso de solo lectura. Puedes consultar el tablero, pero no registrar novedades ni cargar archivos.</span></div>
+
+  <!-- ===== TABLERO ===== -->
+  <section id="view-dash" data-view="dash" style="display:flex;flex-direction:column;gap:18px">
+    <div class="panel">
+      <div class="filters">
+        <div class="field"><span class="lbl">Periodo</span>
+          <div class="seg" id="presets">
+            <button data-p="semana" aria-pressed="false">Esta semana</button>
+            <button data-p="quincena" aria-pressed="false">Esta quincena</button>
+            <button data-p="quincena_ant" aria-pressed="false">Quincena anterior</button>
+            <button data-p="mes" aria-pressed="true">Este mes</button>
+            <button data-p="mes_ant" aria-pressed="false">Mes anterior</button>
+          </div>
+        </div>
+        <div class="field"><label for="f-desde">Desde</label><input type="date" id="f-desde"></div>
+        <div class="field"><label for="f-hasta">Hasta</label><input type="date" id="f-hasta"></div>
+        <div class="field"><span class="lbl" id="f-resp-lbl">Responsable</span><div class="seg" id="f-resp" role="group" aria-labelledby="f-resp-lbl"></div><select id="f-colab" hidden aria-hidden="true" tabindex="-1"></select></div>
+        <div class="field" style="margin-left:auto"><span class="lbl">Informe</span><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="btn-pdf" type="button">Descargar PDF</button><button class="btn" id="btn-xlsx" type="button">Descargar Excel</button></div></div>
+      </div>
+    </div>
+
+    <div id="unmapped-banner" class="banner" hidden></div>
+
+    <div id="dash-empty" class="panel" hidden>
+      <div class="empty">
+        <h3>Aún no hay actividades en este rango</h3>
+        <p>Exporta desde el CRM el informe de actividades por rango de fechas y súbelo en <b>Cargar CRM</b>. El tablero se arma solo con lo que cargues.</p>
+        <button class="btn primary" data-goto="carga">Cargar informe del CRM</button>
+      </div>
+    </div>
+
+    <div id="dash-body" style="display:flex;flex-direction:column;gap:18px">
+      <div class="kpis" id="kpis"></div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div><h2>Cumplimiento del reporte de horas</h2><p id="cumpl-sub"></p></div>
+        </div>
+        <div class="tbl-wrap"><table id="tbl-cumpl"></table></div>
+      </div>
+
+      <div class="grid2">
+        <div class="panel">
+          <div class="panel-head"><div><h2>Horas reportadas frente a la meta</h2><p>Meta ajustada por novedades, en horas</p></div></div>
+          <div class="legend" id="lg-cumpl"></div>
+          <div class="chart-box"><canvas id="ch-cumpl" aria-label="Horas reportadas frente a meta por colaboradora" role="img"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div><h2>Requerimientos atendidos</h2><p>Tickets distintos con actividad en el rango</p></div></div>
+          <div class="chart-box"><canvas id="ch-req" aria-label="Requerimientos por colaboradora" role="img"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><div><h2 id="per-title">Detalle por quincena</h2><p>Porcentaje de cumplimiento en cada corte, hasta hoy</p></div></div>
+        <div class="tbl-wrap"><table id="tbl-per"></table></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><div><h2>Horas reportadas por día</h2><p id="dia-sub"></p></div></div>
+        <div class="legend" id="lg-dia"></div>
+        <div class="chart-box tall"><canvas id="ch-dia" aria-label="Horas reportadas por día" role="img"></canvas></div>
+        <div class="panel-head" style="margin:18px 0 6px"><div><h3 style="font-size:15px">Detalle diario</h3><p id="dia-tbl-sub"></p></div></div>
+        <div class="tbl-wrap" style="max-height:560px;overflow-y:auto"><table id="tbl-dia" class="tbl-dia"></table></div>
+      </div>
+
+      <div class="grid2">
+        <div class="panel">
+          <div class="panel-head"><div><h2>Clientes con más requerimientos</h2><p>Los 10 primeros del rango</p></div></div>
+          <div class="legend" id="lg-cli"></div>
+          <div class="chart-box tall"><canvas id="ch-cli" aria-label="Clientes con más requerimientos" role="img"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div><h2>Requerimientos que más tiempo tomaron</h2><p>Suma de las actividades del ticket dentro del rango</p></div></div>
+          <div class="tbl-wrap"><table id="tbl-top"></table></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div><h2>Tiempo promedio por cliente</h2><p>Horas ÷ requerimientos atendidos, sin lo excluido en Configuración (proyectos de implementación y clientes internos). Haz clic en un encabezado para ordenar.</p></div>
+          <input type="text" id="cli-q" placeholder="Buscar cliente" aria-label="Buscar cliente">
+        </div>
+        <div class="tbl-wrap"><table id="tbl-cli"></table></div>
+        <div style="margin-top:10px" id="cli-more"></div>
+      </div>
+
+      <div class="panel" id="excl-panel" hidden>
+        <div class="panel-head"><div><h2>Requerimientos excluidos del promedio</h2><p id="excl-sub"></p></div></div>
+        <div class="tbl-wrap"><table id="tbl-excl"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== NOVEDADES ===== -->
+  <section id="view-nov" data-view="nov" hidden style="flex-direction:column;gap:18px">
+    <div class="panel">
+      <div class="panel-head"><div><h2>Registrar novedad</h2><p>Las novedades descuentan horas de la meta de reporte de la colaboradora.</p></div></div>
+      <form id="nov-form" autocomplete="off">
+        <div class="form-grid">
+          <div class="field"><label for="nv-colab">Colaboradora</label><select id="nv-colab" required></select></div>
+          <div class="field"><label for="nv-tipo">Tipo de novedad</label><select id="nv-tipo" required></select></div>
+          <div class="field"><span class="lbl">Se registra por</span>
+            <div class="radio-row"><label><input type="radio" name="nv-unidad" id="nv-u-dias" value="dias" checked> Días</label><label><input type="radio" name="nv-unidad" id="nv-u-horas" value="horas"> Horas</label></div>
+          </div>
+          <div class="field nv-dias"><label for="nv-desde">Desde</label><input type="date" id="nv-desde"></div>
+          <div class="field nv-dias"><label for="nv-hasta">Hasta</label><input type="date" id="nv-hasta"></div>
+          <div class="field nv-horas" hidden><label for="nv-fecha">Fecha</label><input type="date" id="nv-fecha"></div>
+          <div class="field nv-horas" hidden><label for="nv-h">Horas</label><input type="number" id="nv-h" min="0" max="12" step="1" value="0"></div>
+          <div class="field nv-horas" hidden><label for="nv-m">Minutos</label><input type="number" id="nv-m" min="0" max="59" step="5" value="0"></div>
+          <div class="field full"><label for="nv-nota">Observación</label><input type="text" id="nv-nota" placeholder="Ej. cita médica, calamidad, soporte de urgencias al cliente…"></div>
+        </div>
+        <p class="help" id="nv-help"></p>
+        <div class="form-actions"><button class="btn primary" type="submit" id="nv-save" data-write>Guardar novedad</button><span class="status" id="nv-status"></span></div>
+      </form>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <div><h2>Novedades registradas</h2><p id="nv-count"></p></div>
+        <div class="filters">
+          <div class="field"><label for="nvf-colab">Colaboradora</label><select id="nvf-colab"></select></div>
+          <div class="field"><label for="nvf-tipo">Tipo</label><select id="nvf-tipo"></select></div>
+          <div class="field"><span class="lbl">Exportar</span><button class="btn" type="button" id="nv-xlsx">Exportar a Excel</button></div>
+        </div>
+      </div>
+      <div class="tbl-wrap"><table id="tbl-nov"></table></div>
+    </div>
+  </section>
+
+  <!-- ===== SÁBADOS ===== -->
+  <section id="view-sab" data-view="sab" hidden style="flex-direction:column;gap:18px">
+    <div class="panel">
+      <div class="panel-head"><div><h2>Sábados laborados</h2><p>Cada sábado que una colaboradora trabaja debe reportar en el CRM las horas definidas en Configuración. Aquí se compara lo reportado ese día contra esa meta.</p></div></div>
+      <div class="filters">
+        <div class="field"><label for="sb-desde">Desde</label><input type="date" id="sb-desde"></div>
+        <div class="field"><label for="sb-hasta">Hasta</label><input type="date" id="sb-hasta"></div>
+        <div class="field"><label for="sb-colab">Colaboradora</label><select id="sb-colab"></select></div>
+        <p class="help" style="margin:0 0 6px">El rango es el mismo del Tablero.</p>
+      </div>
+    </div>
+    <div id="sb-empty" class="panel" hidden><div class="empty"><h3>Aún no hay sábados laborados en este rango</h3><p>Descarga la plantilla, escribe el código de cada consultora y la fecha del sábado que trabajó, e impórtala abajo. También puedes agregarlos uno a uno.</p></div></div>
+    <div id="sb-body" style="display:flex;flex-direction:column;gap:18px">
+      <div class="kpis" id="sb-kpis"></div>
+      <div class="panel">
+        <div class="panel-head"><div><h2>Horas reportadas en cada sábado laborado</h2><p id="sb-chart-sub"></p></div></div>
+        <div class="legend" id="lg-sab"></div>
+        <div class="chart-box"><canvas id="ch-sab" aria-label="Horas reportadas en sábados laborados" role="img"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><h2>Cumplimiento por colaboradora</h2><p>Solo cuentan los sábados ya transcurridos.</p></div></div>
+        <div class="tbl-wrap"><table id="tbl-sab-res"></table></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><h2>Detalle por sábado</h2><p>Horas reportadas en el CRM ese día frente a la meta del sábado.</p></div></div>
+        <div class="tbl-wrap"><table id="tbl-sab-det"></table></div>
+      </div>
+      <div class="panel" id="sb-extra-panel" hidden>
+        <div class="panel-head"><div><h2>Sábados con reporte que no están registrados</h2><p>Hay horas en el CRM esos sábados, pero no aparecen como laborados. Revísalos y agrégalos si corresponde.</p></div></div>
+        <div class="tbl-wrap"><table id="tbl-sab-extra"></table></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div><h2>Importar sábados laborados</h2><p>Excel con dos columnas: <b>Codigo consultor</b> (por ejemplo CNS.15) y <b>Sabado laborado</b> en formato AAAA-MM-DD (año-mes-día).</p></div></div>
+      <div class="form-actions" style="margin-top:0">
+        <button class="btn" type="button" id="sb-plantilla">Descargar plantilla</button>
+        <label class="btn primary" for="sb-file" id="sb-file-lbl">Importar Excel…</label>
+        <input type="file" id="sb-file" accept=".xlsx,.xls,.csv" hidden>
+        <span class="status" id="sb-status"></span>
+      </div>
+      <div id="sb-preview" hidden style="margin-top:12px"></div>
+      <form id="sb-form" class="form-grid" style="margin-top:14px;align-items:end">
+        <div class="field"><label for="sb-m-code">Agregar uno: consultora</label><select id="sb-m-code"></select></div>
+        <div class="field"><label for="sb-m-fecha">Sábado laborado</label><input type="date" id="sb-m-fecha"></div>
+        <div class="field"><button class="btn" type="submit" data-write>Agregar sábado</button></div>
+      </form>
+      <p class="help">Importar <b>suma</b> los sábados del archivo a los que ya estaban; los repetidos no se duplican. Las fechas que no caen en sábado se rechazan y se listan para que las corrijas.</p>
+    </div>
+  </section>
+
+  <!-- ===== CARGA ===== -->
+  <section id="view-carga" data-view="carga" hidden style="flex-direction:column;gap:18px">
+    <div class="panel">
+      <div class="panel-head"><div><h2>Cargar informe de actividades del CRM</h2><p>Excel (.xlsx) o CSV exportado de SupportLite, con las columnas Ticket, Act, Actividad, Usuario, Nombre, Horas, Fecha y Cliente.</p></div></div>
+      <label class="drop" id="drop" for="file-in">
+        <strong>Arrastra aquí el Excel o haz clic para elegirlo</strong>
+        <span class="muted small">Puedes subir el informe de una colaboradora o de varias a la vez. Si ya cargaste esas fechas para el mismo usuario, se reemplazan.</span>
+      </label>
+      <input type="file" id="file-in" accept=".xlsx,.xls,.csv" hidden>
+      <div id="preview" hidden style="margin-top:16px"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div><h2>Datos cargados</h2><p>Un registro por usuario del CRM y mes. Filtra por fechas para ver solo un rango y, si hace falta, eliminar las actividades de ese rango.</p></div></div>
+      <div class="filters" style="margin-bottom:12px">
+        <div class="field"><label for="ld-desde">Desde</label><input type="date" id="ld-desde"></div>
+        <div class="field"><label for="ld-hasta">Hasta</label><input type="date" id="ld-hasta"></div>
+        <div class="field"><label for="ld-user">Usuario CRM</label><select id="ld-user"></select></div>
+        <div class="field"><span class="lbl">Filtro</span><button class="btn" type="button" id="ld-clear">Quitar filtro</button></div>
+      </div>
+      <div id="ld-rango" hidden style="margin-bottom:12px"></div>
+      <div class="tbl-wrap"><table id="tbl-loaded"></table></div>
+    </div>
+  </section>
+
+  <!-- ===== CONFIG ===== -->
+  <section id="view-cfg" data-view="cfg" hidden style="flex-direction:column;gap:18px">
+    <div id="cfg-ro" class="banner" hidden><span>Solo las administradoras pueden cambiar la configuración. Aquí puedes consultarla.</span></div>
+    <div class="panel" id="usr-panel" hidden>
+      <div class="panel-head"><div><h2>Usuarios</h2><p>Quién puede entrar a la aplicación y qué puede hacer. Administradora: todo · Colaboradora: importa informes, registra novedades y descarga Excel · Consulta: solo ve y descarga Excel.</p></div></div>
+      <div class="tbl-wrap"><table id="tbl-usr"></table></div>
+      <div id="usr-temp" hidden style="margin-top:12px"></div>
+      <form id="usr-form" class="form-grid" style="margin-top:14px;align-items:end">
+        <div class="field"><label for="us-nombre">Nombre</label><input type="text" id="us-nombre" required></div>
+        <div class="field"><label for="us-email">Correo</label><input type="email" id="us-email" required></div>
+        <div class="field"><label for="us-rol">Rol</label><select id="us-rol"><option value="colaboradora">Colaboradora</option><option value="consulta">Consulta</option><option value="admin">Administradora</option></select></div>
+        <div class="field"><button class="btn primary" type="submit">Crear usuario</button></div>
+      </form>
+      <span class="status" id="usr-status"></span>
+      <p class="help">Al crear un usuario o restablecer su contraseña se genera una contraseña temporal. Compártela por un medio privado; la persona deberá cambiarla al ingresar.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div><h2>Colaboradoras</h2><p>Relaciona a cada persona con su usuario del CRM (por ejemplo CNS.15). Si tiene más de uno, sepáralos con coma.</p></div></div>
+      <div id="colab-list"></div>
+      <div class="form-actions">
+        <button class="btn" id="colab-add" type="button">Agregar colaboradora</button>
+        <button class="btn primary" id="colab-save" type="button">Guardar colaboradoras</button>
+        <span class="status" id="colab-status"></span>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div><h2>Tipos de novedad</h2><p>Las opciones que aparecen al registrar una novedad. La unidad es la que se propone por defecto; al registrar se puede cambiar.</p></div></div>
+      <div id="tipos-list"></div>
+      <div class="form-actions">
+        <button class="btn" id="tipo-add" type="button" data-write>Agregar tipo</button>
+        <button class="btn primary" id="tipo-save" type="button" data-write>Guardar tipos</button>
+        <span class="status" id="tipo-status"></span>
+      </div>
+      <p class="help">“Día no laborable (todas)” es fijo porque convierte la fecha en no hábil para todo el equipo; solo se le puede cambiar el nombre. Un tipo con novedades registradas no se puede quitar.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div><h2>Jornada y reglas de cumplimiento</h2><p id="cfg-resumen"></p></div></div>
+      <form id="cfg-form">
+        <div class="form-grid">
+          <div class="field"><label for="c-hs">Horas semanales</label><input type="number" id="c-hs" min="1" max="60" step="any"></div>
+          <div class="field"><label for="c-hd">Jornada lunes a viernes (h)</label><input type="number" id="c-hd" min="1" max="12" step="any"></div>
+          <div class="field"><label for="c-hsab">Horas laboradas el sábado</label><input type="number" id="c-hsab" min="0.5" max="12" step="any"></div>
+          <div class="field"><label for="c-dm">Descanso (minutos)</label><input type="number" id="c-dm" min="0" max="120" step="any"></div>
+          <div class="field"><label for="c-dc">Descanso por cada (horas)</label><input type="number" id="c-dc" min="1" max="12" step="any"></div>
+          <div class="field"><label for="c-per">Corte de seguimiento</label><select id="c-per"><option value="semana">Semanal (lunes a sábado)</option><option value="quincena">Quincenal</option><option value="mes">Mensual</option></select></div>
+          <div class="field"><label for="c-ok">Cumple desde (%)</label><input type="number" id="c-ok" min="50" max="120" step="any"></div>
+          <div class="field"><label for="c-al">Alerta desde (%)</label><input type="number" id="c-al" min="0" max="120" step="any"></div>
+          <div class="field full"><label class="switch" for="c-desc" style="text-transform:none;letter-spacing:0;font-weight:500;color:var(--fg)"><input type="checkbox" id="c-desc"> <span>El descanso hace parte de la jornada pero no se reporta en el CRM, así que se descuenta de la meta de reporte.</span></label></div>
+        </div>
+        <p class="help">Las semanas de trabajo van de lunes a sábado; el domingo es descanso y no suma a la meta ni al cumplimiento. Si la casilla del descanso está marcada, también se descuenta en el sábado laborado (4 h → 3:45). La meta se calcula por día hábil (lunes a viernes, sin festivos) repartiendo las horas semanales en cinco días. Así las horas del sábado quincenal quedan incluidas en la meta y se compensan cuando se trabaja el sábado. La meta solo cuenta días hasta hoy.</p>
+        <div class="form-actions"><button class="btn primary" type="submit" id="cfg-save">Guardar reglas</button><span class="status" id="cfg-status"></span></div>
+      </form>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div><h2>Promedio por requerimiento</h2><p>Lo que no debe entrar en el promedio por requerimiento: líneas de larga duración (proyectos de implementación) y clientes internos. Sus horas siguen contando para el cumplimiento y los requerimientos atendidos.</p></div></div>
+      <h3 style="font-size:14px;margin:0 0 6px">Líneas del CRM excluidas</h3>
+      <div id="lin-list" class="festivos"></div>
+      <h3 style="font-size:14px;margin:16px 0 6px">Clientes excluidos (internos)</h3>
+      <div id="cliex-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      <div class="form-grid" style="margin-top:10px;align-items:end">
+        <div class="field full"><label for="cliex-in">Agregar cliente</label><input type="text" id="cliex-in" list="cliex-dl" placeholder="Escribe y elige el cliente"><datalist id="cliex-dl"></datalist></div>
+      </div>
+      <div class="form-actions" style="margin-top:8px"><button class="btn" type="button" id="cliex-add" data-write>Agregar a excluidos</button></div>
+      <div class="form-actions"><button class="btn primary" type="button" id="lin-save" data-write>Guardar exclusiones</button><span class="status" id="lin-status"></span></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div><h2>Respaldo y traslado de datos</h2><p>Exporta toda la información a un archivo para guardarla como respaldo o pasarla a la otra versión del tablero (web o local).</p></div></div>
+      <div class="form-actions" style="margin-top:0">
+        <button class="btn" type="button" id="bk-export">Exportar datos</button>
+        <label class="btn" for="bk-file" id="bk-import-lbl">Importar datos…</label>
+        <input type="file" id="bk-file" accept=".json,application/json" hidden>
+        <span class="status" id="bk-status"></span>
+      </div>
+      <div id="bk-preview" hidden style="margin-top:12px"></div>
+      <p class="help">El archivo incluye actividades cargadas, novedades, colaboradoras, jornada, tipos de novedad y festivos guardados. Importar <b>reemplaza</b> todos esos datos por los del archivo; solo las administradoras pueden hacerlo.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div><h2>Festivos por año</h2><p>Si un año no tiene festivos guardados, la app los calcula con la Ley Emiliani. Cuando guardas la lista de un año, esa lista es la que se usa.</p></div>
+        <div class="field"><label for="fest-year">Año</label><input type="number" id="fest-year" min="2020" max="2100" step="1" style="width:110px"></div></div>
+      <div id="fest-src" style="margin-bottom:10px"></div>
+      <div class="festivos" id="fest-list"></div>
+      <details id="fest-imp" style="margin-top:14px;border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:var(--surface-2)">
+        <summary style="cursor:pointer;font-weight:600">Importar la lista completa del año</summary>
+        <div class="form-actions" style="margin-top:10px">
+          <button class="btn" type="button" id="fest-web" data-write>Traer de internet</button>
+          <button class="btn" type="button" id="fest-calc" data-write>Usar los calculados por ley</button>
+        </div>
+        <div class="field" style="margin-top:12px"><label for="fest-paste">Pegar desde una página web</label>
+          <textarea id="fest-paste" rows="5" placeholder="Copia la tabla de festivos de cualquier página (fecha y nombre) y pégala aquí. Ejemplo: Lunes 11 de enero de 2027 · Día de los Reyes Magos"></textarea></div>
+        <div class="form-actions"><button class="btn" type="button" id="fest-parse" data-write>Leer fechas pegadas</button><span class="status" id="fest-imp-status"></span></div>
+        <p class="help">La lista importada reemplaza la del año en pantalla. Revísala y luego presiona “Guardar festivos del año”. Traer de internet consulta Nager.Date (date.nager.at), un servicio público de festivos por país; necesita conexión.</p>
+      </details>
+      <div class="form-grid" style="margin-top:14px;align-items:end">
+        <div class="field"><label for="fest-d">Fecha del festivo</label><input type="date" id="fest-d"></div>
+        <div class="field"><button class="btn" type="button" id="fest-add" data-write>Agregar a la lista</button></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn primary" type="button" id="fest-save" data-write>Guardar festivos del año</button>
+        <button class="btn" type="button" id="fest-reset" data-write>Volver al cálculo automático</button>
+        <span class="status" id="fest-status"></span>
+      </div>
+      <p class="help">Para un día que no se trabaja solo en la empresa (por ejemplo, un cierre interno), usa la novedad “Día no laborable (todas)”.</p>
+    </div>
+  </section>
+</main>
+</div>
+<div id="toast" class="toast" hidden></div>
+<div id="auth" hidden>
+  <div class="card">
+    <div class="marca"><b></b>Seguimiento Mesa de Soporte</div>
+    <form id="auth-login" hidden autocomplete="on">
+      <h2>Ingresar</h2>
+      <div class="field"><label for="lg-email">Correo</label><input type="email" id="lg-email" autocomplete="username" required></div>
+      <div class="field"><label for="lg-clave">Contraseña</label><input type="password" id="lg-clave" autocomplete="current-password" required></div>
+      <button class="btn primary" type="submit">Ingresar</button>
+      <p class="help">¿Olvidaste tu contraseña? Pídele a una administradora que la restablezca desde Configuración → Usuarios.</p>
+    </form>
+    <form id="auth-setup" hidden>
+      <h2>Crear la cuenta de administradora</h2>
+      <p class="help" style="margin:0">Es la primera vez que se abre la aplicación. Esta cuenta podrá crear los usuarios de las demás personas.</p>
+      <div class="field"><label for="st-nombre">Nombre</label><input type="text" id="st-nombre" autocomplete="name" required></div>
+      <div class="field"><label for="st-email">Correo</label><input type="email" id="st-email" autocomplete="username" required></div>
+      <div class="field"><label for="st-clave">Contraseña (mínimo 8 caracteres)</label><input type="password" id="st-clave" autocomplete="new-password" minlength="8" required></div>
+      <div class="field"><label for="st-clave2">Repite la contraseña</label><input type="password" id="st-clave2" autocomplete="new-password" minlength="8" required></div>
+      <button class="btn primary" type="submit">Crear cuenta e ingresar</button>
+    </form>
+    <div id="auth-remoto" hidden>
+      <h2>Aplicación sin configurar</h2>
+      <p class="help" style="margin:0">Todavía no hay una cuenta de administradora. Debe crearse desde el equipo donde está instalada la aplicación.</p>
+    </div>
+    <form id="auth-cambiar" hidden>
+      <h2>Cambia tu contraseña</h2>
+      <p class="help" style="margin:0" id="cb-ayuda">Elige una contraseña nueva de al menos 8 caracteres.</p>
+      <div class="field"><label for="cb-actual">Contraseña actual o temporal</label><input type="password" id="cb-actual" autocomplete="current-password" required></div>
+      <div class="field"><label for="cb-nueva">Contraseña nueva</label><input type="password" id="cb-nueva" autocomplete="new-password" minlength="8" required></div>
+      <div class="field"><label for="cb-nueva2">Repite la contraseña nueva</label><input type="password" id="cb-nueva2" autocomplete="new-password" minlength="8" required></div>
+      <div class="form-actions" style="margin:0"><button class="btn primary" type="submit">Guardar contraseña</button><button class="btn" type="button" id="cb-cancelar">Cancelar</button></div>
+    </form>
+    <span class="status" id="auth-status"></span>
+  </div>
+</div>
+
+<script src="lib/supabase.js"></script>
+<script src="lib/xlsx.full.min.js"></script>
+<script src="lib/chart.umd.js"></script>
+<script>
+"use strict";
+/* ================= Constantes ================= */
+const DEF_CFG={horasSemana:42,horasDia:8,descansoMin:15,descansoCadaH:4,descuentaDescanso:true,periodo:'semana',umbralOk:100,umbralAlerta:95,horasSabado:4};
+const TIPOS_BASE=[
+  {id:'permiso',nombre:'Permiso',u:'horas'},
+  {id:'tiempo_muerto',nombre:'Tiempo muerto (baño, pausas)',u:'horas'},
+  {id:'vacaciones',nombre:'Vacaciones',u:'dias'},
+  {id:'incapacidad',nombre:'Incapacidad',u:'dias'},
+  {id:'licencia',nombre:'Licencia',u:'dias'},
+  {id:'emergencia',nombre:'Servicio de emergencias',u:'horas'},
+  {id:'festivo',nombre:'Día no laborable (todas)',u:'dias'},
+  {id:'otro',nombre:'Otra novedad',u:'horas'}
+];
+let TIPOS=TIPOS_BASE.map(t=>({...t}));let TIPO=Object.fromEntries(TIPOS.map(t=>[t.id,t]));let tiposDraft=null;
+function setTipos(lista){
+  const base=Array.isArray(lista)&&lista.length?lista:TIPOS_BASE;
+  TIPOS=base.map(t=>({...t}));
+  if(!TIPOS.some(t=>t.id==='festivo'))TIPOS.push({...TIPOS_BASE.find(t=>t.id==='festivo')});
+  TIPO=Object.fromEntries(TIPOS.map(t=>[t.id,t]));fillTipoSelects();
+}
+function fillTipoSelects(){
+  const opts=TIPOS.map(x=>`<option value="${esc(x.id)}">${esc(x.nombre)}</option>`).join('');
+  const t=document.getElementById('nv-tipo');
+  if(t.dataset.sig!==opts){const v=t.value;t.innerHTML=opts;t.dataset.sig=opts;t.value=TIPO[v]?v:(TIPO.permiso?'permiso':(TIPOS[0]?.id||''));if(typeof syncNovForm==='function')syncNovForm()}
+  const tf=document.getElementById('nvf-tipo');const o2='<option value="todos">Todos</option>'+opts;
+  if(tf.dataset.sig!==o2){tf.innerHTML=o2;tf.dataset.sig=o2;if(S.nvf.tipo!=='todos'&&!TIPO[S.nvf.tipo])S.nvf.tipo='todos';tf.value=S.nvf.tipo}
+}
+const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const DIAS=['dom','lun','mar','mié','jue','vie','sáb'];
+
+/* ================= Estado ================= */
+const S={sab:{},cfg:{...DEF_CFG},colabs:[],novedades:[],act:{},acts:[],ready:{cfg:false,col:false,act:false,nov:false},
+  desde:'',hasta:'',preset:'mes',colab:'todas',tab:'dash',cliSort:{k:'horas',d:-1},cliAll:false,cliQ:'',nvf:{colab:'todas',tipo:'todos'}};
+const ES_LOCAL=false;
+let SESION=null;
+let isAdmin=false, db=null, canWrite=true, charts={}, preview=null, colabDraft=null, festDraft=null, festYear=+hoyStr().slice(0,4);
+function hoyStr(){const t=new Date();return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`}
+S.festDb={};
+
+/* ================= Fechas ================= */
+const pad=n=>String(n).padStart(2,'0');
+const P=s=>new Date(s+'T00:00:00Z');
+const iso=d=>d.toISOString().slice(0,10);
+const add=(s,n)=>{const d=P(s);d.setUTCDate(d.getUTCDate()+n);return iso(d)};
+const dow=s=>P(s).getUTCDay();
+const hoy=(()=>{const t=new Date();return `${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`})();
+const finMes=s=>{const d=P(s.slice(0,8)+'01');d.setUTCMonth(d.getUTCMonth()+1);d.setUTCDate(0);return iso(d)};
+const fCorta=s=>{const d=P(s);return `${d.getUTCDate()} ${MESES[d.getUTCMonth()]}`};
+const fLarga=s=>{const d=P(s);return `${d.getUTCDate()} ${MESES[d.getUTCMonth()]} ${d.getUTCFullYear()}`};
+function* dias(a,b){for(let s=a;s<=b;s=add(s,1))yield s}
+
+const _fest={};
+function festivosCO(y){
+  if(_fest[y])return _fest[y];
+  const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),
+    h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),
+    mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;
+  const pas=`${y}-${pad(mo)}-${pad(da)}`;
+  const lunes=s=>{const w=dow(s);return w===1?s:add(s,(8-w)%7)};
+  const L=[
+    [`${y}-01-01`,'Año Nuevo'],[lunes(`${y}-01-06`),'Reyes Magos'],[lunes(`${y}-03-19`),'San José'],
+    [add(pas,-3),'Jueves Santo'],[add(pas,-2),'Viernes Santo'],[`${y}-05-01`,'Día del Trabajo'],
+    [lunes(add(pas,39)),'Ascensión del Señor'],[lunes(add(pas,60)),'Corpus Christi'],[lunes(add(pas,68)),'Sagrado Corazón'],
+    [lunes(`${y}-06-29`),'San Pedro y San Pablo'],[`${y}-07-20`,'Independencia'],[`${y}-08-07`,'Batalla de Boyacá'],
+    [lunes(`${y}-08-15`),'Asunción de la Virgen'],[lunes(`${y}-10-12`),'Día de la Raza'],[lunes(`${y}-11-01`),'Todos los Santos'],
+    [lunes(`${y}-11-11`),'Independencia de Cartagena'],[`${y}-12-08`,'Inmaculada Concepción'],[`${y}-12-25`,'Navidad']
+  ].sort((p,q)=>p[0]<q[0]?-1:1);
+  _fest[y]={lista:L,set:new Set(L.map(x=>x[0]))};
+  return _fest[y];
+}
+let globalNoLab=new Set();
+function rebuildNoLab(){
+  globalNoLab=new Set();
+  for(const n of S.novedades){ if(n.tipo==='festivo'&&n.unidad==='dias'&&n.desde&&n.hasta){for(const d of dias(n.desde,n.hasta))globalNoLab.add(d)} }
+}
+const _festG={};
+function festivosAnio(y){
+  const g=S.festDb[y];
+  if(g&&Array.isArray(g.lista)){if(_festG[y]?.ref!==g){const L=[...g.lista].sort((p,q)=>p[0]<q[0]?-1:1);_festG[y]={ref:g,lista:L,set:new Set(L.map(x=>x[0])),fuente:'guardado'}}return _festG[y]}
+  const c=festivosCO(y);return {lista:c.lista,set:c.set,fuente:'calculado'};
+}
+const esFestivo=s=>festivosAnio(+s.slice(0,4)).set.has(s)||globalNoLab.has(s);
+const esHabil=s=>{const w=dow(s);return w>=1&&w<=5&&!esFestivo(s)};
+const habilesEntre=(a,b)=>{let n=0;if(a>b)return 0;for(const d of dias(a,b))if(esHabil(d))n++;return n};
+
+/* ================= Formatos ================= */
+const fmtH=h=>{if(h==null||!isFinite(h))return '—';const neg=h<0;let m=Math.round(Math.abs(h)*60);return (neg?'−':'')+Math.floor(m/60)+':'+pad(m%60)};
+const fmtN=(n,d=0)=>n.toLocaleString('es-CO',{minimumFractionDigits:d,maximumFractionDigits:d});
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s??'').normalize('NFD').replace(/[̀-ͯ]/g,'').trim().toLowerCase();
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,2600)}
+const cssVar=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ================= Reglas de jornada ================= */
+function factorReporte(){const c=S.cfg;if(!c.descuentaDescanso)return 1;const f=1-((+c.descansoMin||0)/60)/(+c.descansoCadaH||4);return Math.max(0,Math.min(1,f))}
+const metaDiaLaboral=()=>(+S.cfg.horasSemana||0)/5;
+const metaDia=()=>metaDiaLaboral()*factorReporte();
+function durNovedad(n){ // horas que descuenta, sin limitar a rango
+  if(n.unidad==='dias')return habilesEntre(n.desde,n.hasta)*metaDia();
+  return +n.horas||0;
+}
+function codesOf(c){return String(c.codigos||'').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean)}
+function codeMap(){const m={};for(const c of S.colabs)for(const k of codesOf(c))m[k]=c.id;return m}
+function personas(){
+  const out=S.colabs.map((c,i)=>({id:c.id,nombre:c.nombre||'Sin nombre',color:c.color??i,real:true}));
+  const map=codeMap();const seen=new Set();
+  for(const a of S.acts){if(!map[a.code]&&!seen.has(a.code)){seen.add(a.code)}}
+  let i=out.length;for(const code of [...seen].sort())out.push({id:'code:'+code,nombre:code+' (sin asignar)',color:(i++)%6,real:false,code});
+  return out;
+}
+function shortNames(ps){const f=ps.map(p=>String(p.nombre).trim().split(/\s+/));const first=f.map(w=>w[0]||'');
+  return ps.map((p,i)=>!p.real?p.code:(first.filter(x=>x===first[i]).length>1?f[i].slice(0,2).join(' '):first[i]))}
+const colorOf=p=>cssVar('--s'+(((p.color??0)%6)+1));
+
+function calc(p,a,b){
+  const fin=b<hoy?b:hoy;
+  const habiles=a<=fin?habilesEntre(a,fin):0;
+  const md=metaDia();const base=habiles*md;
+  let desc=0;const det={};
+  if(p.real){
+    for(const n of S.novedades){
+      if(n.tipo==='festivo')continue;
+      if(n.colab!==p.id&&n.colab!=='todas')continue;
+      let h=0;
+      if(n.unidad==='dias'){const x=n.desde>a?n.desde:a, y=n.hasta<fin?n.hasta:fin; if(x<=y)h=habilesEntre(x,y)*md;}
+      else if(n.fecha>=a&&n.fecha<=fin)h=+n.horas||0;
+      if(h>0){desc+=h;det[n.tipo]=(det[n.tipo]||0)+h}
+    }
+  }
+  const meta=Math.max(0,base-desc);
+  let rep=0;for(const x of S.acts)if(x.pid===p.id&&x.fecha>=a&&x.fecha<=b&&dow(x.fecha)!==0)rep+=x.min/60;
+  return {habiles,base,desc,det,meta,rep,dif:rep-meta,pct:meta>0?rep/meta*100:null};
+}
+function estado(pct){if(pct==null)return {k:'na',t:'Sin meta'};if(pct>=S.cfg.umbralOk)return {k:'ok',t:'Cumple'};if(pct>=S.cfg.umbralAlerta)return {k:'warn',t:'Cerca'};return {k:'bad',t:'Por debajo'}}
+function cortes(a,b){
+  const out=[];const per=S.cfg.periodo;let s=a;
+  while(s<=b){let e;
+    if(per==='semana'){const w=dow(s);if(w===0){s=add(s,1);continue}e=add(s,6-w)}
+    else if(per==='mes'){e=finMes(s)}
+    else{const d=+s.slice(8);e=d<=15?s.slice(0,8)+'15':finMes(s)}
+    if(e>b)e=b;out.push([s,e]);s=add(e,1);
+  }
+  return out.filter(([x])=>x<=hoy);
+}
+
+/* ================= Datos ================= */
+function flatten(){
+  const map=codeMap();const out=[];
+  for(const [id,d] of Object.entries(S.act)){
+    const code=String(d.codigo||'').toUpperCase();const pid=map[code]||('code:'+code);
+    for(const r of d.rows||[])out.push({code,pid,ticket:String(r[0]),act:r[1],actividad:r[2],linea:r[3],min:+r[4]||0,fecha:r[5],cliente:r[6]||'(sin cliente)'});
+  }
+  S.acts=out;
+}
+
+/* ================= Render: pestañas ================= */
+function setTab(t){
+  S.tab=t;
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t?'true':'false'));
+  document.querySelectorAll('[data-view]').forEach(v=>{const on=v.dataset.view===t;v.hidden=!on;if(on)v.style.display='flex'});
+  try{localStorage.setItem('tab',t)}catch(e){}
+  render();
+}
+let _raf=0;function render(){cancelAnimationFrame(_raf);_raf=requestAnimationFrame(doRender)}
+function doRender(){
+  document.getElementById('ro-banner').hidden=canWrite;
+  document.querySelectorAll('[data-write]').forEach(el=>el.disabled=!canWrite);
+  fillColabSelects();
+  if(S.tab==='dash')renderDash();
+  if(S.tab==='nov')renderNov();
+  if(S.tab==='sab')renderSab();
+  if(S.tab==='carga')renderLoaded();
+  if(S.tab==='cfg')renderCfg();
+}
+function fillColabSelects(){
+  const ps=personas();
+  const fc=document.getElementById('f-colab');
+  const opts='<option value="todas">Todas</option>'+ps.map(p=>`<option value="${esc(p.id)}">${esc(p.nombre)}</option>`).join('');
+  if(fc.dataset.sig!==opts){fc.innerHTML=opts;fc.dataset.sig=opts}
+  if(![...fc.options].some(o=>o.value===S.colab))S.colab='todas';
+  fc.value=S.colab;
+  const fr=document.getElementById('f-resp');const cortos=shortNames(ps);
+  const chips=`<button type="button" data-resp="todas" aria-pressed="${S.colab==='todas'}">Todas</button>`+ps.map((p,i)=>`<button type="button" data-resp="${esc(p.id)}" aria-pressed="${S.colab===p.id}" title="${esc(p.nombre)}"><span class="dot" style="--c:${colorOf(p)};display:inline-block;margin-right:6px;vertical-align:0"></span>${esc(cortos[i])}</button>`).join('');
+  if(fr.dataset.sig!==chips){fr.innerHTML=chips;fr.dataset.sig=chips}
+  const real=ps.filter(p=>p.real);
+  const nv=document.getElementById('nv-colab');
+  const o2='<option value="todas">Todas</option>'+real.map(p=>`<option value="${esc(p.id)}">${esc(p.nombre)}</option>`).join('');
+  if(nv.dataset.sig!==o2){const v=nv.value;nv.innerHTML=o2;nv.dataset.sig=o2;if(v&&[...nv.options].some(o=>o.value===v))nv.value=v;else if(real[0])nv.value=real[0].id}
+  const nf=document.getElementById('nvf-colab');
+  if(nf.dataset.sig!==o2){nf.innerHTML=o2.replace('>Todas<','>Todas las personas<');nf.dataset.sig=o2;nf.value=S.nvf.colab}
+}
+
+/* ================= Render: tablero ================= */
+function renderDash(){
+  const a=S.desde,b=S.hasta;
+  document.getElementById('f-desde').value=a;document.getElementById('f-hasta').value=b;
+  document.querySelectorAll('#presets button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.p===S.preset?'true':'false'));
+  const ps=personas();
+  const sel=S.colab==='todas'?ps:ps.filter(p=>p.id===S.colab);
+  const selIds=new Set(sel.map(p=>p.id));
+  const acts=S.acts.filter(x=>x.fecha>=a&&x.fecha<=b&&selIds.has(x.pid));
+
+  // banner sin asignar
+  const um=ps.filter(p=>!p.real&&S.acts.some(x=>x.pid===p.id));
+  const ub=document.getElementById('unmapped-banner');
+  if(um.length){ub.hidden=false;ub.innerHTML=`<span>${um.length===1?'El usuario':'Los usuarios'} del CRM <b>${um.map(p=>esc(p.code)).join(', ')}</b> no ${um.length===1?'está asignado':'están asignados'} a ninguna colaboradora. Sus horas aparecen aparte y sin novedades.</span><button class="btn sm" data-goto="cfg">Asignar en Configuración</button>`}
+  else ub.hidden=true;
+
+  const loading=!S.ready.act;
+  const empty=!loading&&acts.length===0;
+  document.getElementById('dash-empty').hidden=!empty;
+  document.getElementById('dash-body').hidden=empty;
+  if(empty){destroyCharts();return}
+
+  // KPIs
+  const tickets=new Map();for(const x of acts){const t=tickets.get(x.ticket)||{min:0};t.min+=x.min;tickets.set(x.ticket,t)}
+  const horas=acts.reduce((s,x)=>s+x.min,0)/60;
+  const clientes=new Set(acts.map(x=>x.cliente));
+  let tm=0,tr=0;const rows=sel.map(p=>{const c=calc(p,a,b);tm+=c.meta;tr+=c.rep;return {p,c}});
+  const gp=tm>0?tr/tm*100:null;const ge=estado(gp);const pr=promReq(acts);const exc=tickets.size-pr.req;
+  document.getElementById('kpis').innerHTML=[
+    ['Requerimientos atendidos',fmtN(tickets.size),`${fmtN(acts.length)} actividades registradas`],
+    ['Horas reportadas',fmtH(horas),`Meta del rango ${fmtH(tm)}`],
+    ['Cumplimiento',gp==null?'—':fmtN(gp,0)+'%',`<span class="chip ${ge.k}">${ge.t}</span>`],
+    ['Clientes atendidos',fmtN(clientes.size),'Con al menos una actividad'],
+    ['Promedio por requerimiento',pr.prom==null?'—':fmtH(pr.prom),exc>0?`Sin proyectos ni clientes internos · ${fmtN(pr.req)} req.`:'Horas por ticket en el rango']
+  ].map(([l,v,s])=>`<div class="kpi"><span class="k-l">${l}</span><span class="k-v">${v}</span><span class="k-s">${s}</span></div>`).join('');
+
+  const fin=b<hoy?b:hoy;
+  const hab=a<=fin?habilesEntre(a,fin):0;
+  document.getElementById('cumpl-sub').textContent=`${fLarga(a)} a ${fLarga(b)} · ${hab} días hábiles hasta ${fLarga(fin<a?a:fin)} = ${fmtH(hab*metaDiaLaboral())} laborales por persona, ${fmtH(hab*metaDia())} a reportar descontando descansos`;
+  // tabla cumplimiento
+  const t=document.getElementById('tbl-cumpl');
+  t.innerHTML=`<thead><tr><th>Colaboradora</th><th class="r">Días hábiles</th><th class="r">Meta base</th><th class="r">Novedades</th><th class="r">Meta ajustada</th><th class="r">Reportadas</th><th class="r">Diferencia</th><th>Cumplimiento</th><th>Estado</th></tr></thead><tbody>`+
+    rows.map(({p,c})=>{const e=estado(c.pct);const w=c.pct==null?0:Math.min(100,c.pct/1.2);const mk=100/1.2;
+      const det=Object.entries(c.det).map(([k,v])=>`${TIPO[k]?.nombre||k}: ${fmtH(v)}`).join(' · ');
+      return `<tr><td><span class="who"><span class="dot" style="--c:${colorOf(p)}"></span>${esc(p.nombre)}</span></td>
+      <td class="r">${c.habiles}</td><td class="r">${fmtH(c.base)}</td>
+      <td class="r" title="${esc(det)}">${c.desc>0?'−'+fmtH(c.desc):'0:00'}</td><td class="r"><b>${fmtH(c.meta)}</b></td>
+      <td class="r"><b>${fmtH(c.rep)}</b></td><td class="r" style="color:var(--${c.dif<0?'bad':'ok'})">${c.dif>=0?'+':''}${fmtH(c.dif)}</td>
+      <td><div class="pctcell"><div class="meter ${e.k}" style="flex:1"><i style="width:${w}%"></i><b style="left:${mk}%"></b></div><span class="num">${c.pct==null?'—':fmtN(c.pct,0)+'%'}</span></div></td>
+      <td><span class="chip ${e.k}">${e.t}</span></td></tr>`}).join('')+'</tbody>';
+
+  // cortes
+  const cs=cortes(a,b);const pn={semana:'semana',quincena:'quincena',mes:'mes'}[S.cfg.periodo];
+  document.getElementById('per-title').textContent='Detalle por '+pn;
+  document.getElementById('tbl-per').innerHTML=`<thead><tr><th>Colaboradora</th>${cs.map(([x,y])=>`<th class="r">${fCorta(x)} – ${fCorta(y)}</th>`).join('')}</tr></thead><tbody>`+
+    sel.map(p=>`<tr><td><span class="who"><span class="dot" style="--c:${colorOf(p)}"></span>${esc(p.nombre)}</span></td>${cs.map(([x,y])=>{const c=calc(p,x,y);const e=estado(c.pct);
+      return `<td class="r"><span class="chip ${e.k}" title="${fmtH(c.rep)} de ${fmtH(c.meta)}">${c.pct==null?'—':fmtN(c.pct,0)+'%'}</span><div class="small muted num">${fmtH(c.rep)} / ${fmtH(c.meta)}</div></td>`}).join('')}</tr>`).join('')+'</tbody>';
+
+  // tickets por persona
+  const reqP=sel.map(p=>new Set(acts.filter(x=>x.pid===p.id).map(x=>x.ticket)).size);
+
+  // por día
+  const dLabels=[];for(const d of dias(a,b)){const w=dow(d);if((w>=1&&w<=6)||S.acts.some(x=>x.fecha===d&&selIds.has(x.pid)))dLabels.push(d)}
+  document.getElementById('dia-sub').textContent=`Línea horizontal punteada: jornada de ${fmtN(+S.cfg.horasDia,1)} h (${fmtH(S.cfg.horasDia*factorReporte())} de reporte esperado). Las líneas verticales marcan los sábados y los festivos llevan *.`;
+
+  // clientes
+  const cli=new Map();
+  for(const x of acts){let c=cli.get(x.cliente);if(!c){c={cliente:x.cliente,t:new Set(),acts:0,min:0,porP:{},tp:new Set(),mp:0};cli.set(x.cliente,c)}c.t.add(x.ticket);c.acts++;c.min+=x.min;(c.porP[x.pid]??=new Set()).add(x.ticket);if(!excluidaAct(x)){c.tp.add(x.ticket);c.mp+=x.min}}
+  const cliArr=[...cli.values()].map(c=>({cliente:c.cliente,req:c.t.size,acts:c.acts,horas:c.min/60,prom:c.tp.size?c.mp/60/c.tp.size:null,soloProy:!c.tp.size,porP:c.porP}));
+  const top10=[...cliArr].sort((x,y)=>y.req-x.req||y.horas-x.horas).slice(0,10);
+
+  drawCharts(sel,rows,reqP,dLabels,acts,top10);
+  renderTablaDia(sel,dLabels,acts);
+
+  // top tickets
+  const tk=new Map();
+  for(const x of acts){let r=tk.get(x.ticket);if(!r){r={ticket:x.ticket,cliente:x.cliente,min:0,n:0,ps:new Set(),d1:x.fecha,d2:x.fecha,big:x};tk.set(x.ticket,r)}
+    r.min+=x.min;r.n++;r.ps.add(x.pid);if(x.fecha<r.d1)r.d1=x.fecha;if(x.fecha>r.d2)r.d2=x.fecha;if(x.min>r.big.min)r.big=x}
+  const pById=Object.fromEntries(ps.map(p=>[p.id,p]));
+  const topT=[...tk.values()].sort((x,y)=>y.min-x.min).slice(0,10);
+  document.getElementById('tbl-top').innerHTML=`<thead><tr><th>Ticket</th><th>Cliente y actividad principal</th><th class="r">Act.</th><th class="r">Horas</th></tr></thead><tbody>`+
+    topT.map(r=>`<tr><td class="num"><b>${esc(r.ticket)}</b><div class="small muted">${r.d1===r.d2?fCorta(r.d1):fCorta(r.d1)+' – '+fCorta(r.d2)}</div></td>
+      <td class="wrapcell"><div><b>${esc(r.cliente)}</b></div><div class="small muted">${esc(r.big.actividad)}</div><div class="small" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:2px">${[...r.ps].map(id=>`<span class="who"><span class="dot" style="--c:${colorOf(pById[id]||{})}"></span>${esc(pById[id]?.nombre||id)}</span>`).join('')}</div></td>
+      <td class="r">${r.n}</td><td class="r"><b>${fmtH(r.min/60)}</b></td></tr>`).join('')+'</tbody>';
+
+  // tabla clientes
+  const q=norm(S.cliQ);const k=S.cliSort.k,dir=S.cliSort.d;
+  let list=cliArr.filter(c=>!q||norm(c.cliente).includes(q)).sort((x,y)=>k==='cliente'?dir*x.cliente.localeCompare(y.cliente,'es'):dir*((x[k]??-1)-(y[k]??-1)));
+  const total=list.length;if(!S.cliAll)list=list.slice(0,15);
+  const H=(key,lab,r)=>`<th class="sortable ${r?'r':''}" data-sort="${key}">${lab} <span class="arr">${S.cliSort.k===key?(S.cliSort.d>0?'↑':'↓'):''}</span></th>`;
+  document.getElementById('tbl-cli').innerHTML=`<thead><tr>${H('cliente','Cliente')}${H('req','Requerimientos',1)}${H('acts','Actividades',1)}${H('horas','Horas totales',1)}${H('prom','Promedio por requerimiento',1)}</tr></thead><tbody>`+
+    list.map(c=>`<tr><td class="wrapcell">${esc(c.cliente)}</td><td class="r">${c.req}</td><td class="r">${c.acts}</td><td class="r">${fmtH(c.horas)}</td><td class="r">${c.prom==null?'<span class="small muted">Excluido del promedio</span>':`<b>${fmtH(c.prom)}</b>`}</td></tr>`).join('')+
+    (list.length?'':'<tr><td colspan="5" class="muted">Ningún cliente coincide con la búsqueda.</td></tr>')+'</tbody>';
+  renderExcluidos(acts,pById);
+  document.getElementById('cli-more').innerHTML=total>15?`<button class="linkbtn" id="cli-toggle">${S.cliAll?'Ver solo los 15 primeros':`Ver los ${total} clientes`}</button>`:'';
+}
+
+function novedadesDia(p,d){
+  const out=[];if(!p.real)return out;
+  for(const n of S.novedades){if(n.tipo==='festivo')continue;if(n.colab!==p.id&&n.colab!=='todas')continue;
+    if(n.unidad==='dias'&&d>=n.desde&&d<=n.hasta)out.push({t:n.tipo,dia:true});
+    else if(n.unidad==='horas'&&n.fecha===d)out.push({t:n.tipo,h:+n.horas||0});}
+  return out;
+}
+function renderTablaDia(sel,dLabels,acts){
+  const esp=(+S.cfg.horasDia||0)*factorReporte();
+  document.getElementById('dia-tbl-sub').textContent=`Jornada esperada de lunes a viernes: ${fmtH(esp)} reportadas. En ámbar los días por debajo, en rojo los días hábiles sin reporte. Los sábados aparecen sombreados.`;
+  const m={};for(const x of acts){const k=x.pid+'|'+x.fecha;m[k]=(m[k]||0)+x.min/60}
+  const tot=sel.map(()=>0);let gran=0;
+  const short=shortNames(sel);
+  const body=dLabels.map(d=>{const w=dow(d);const fest=esFestivo(d);const hab=esHabil(d);let rowT=0;
+    const cells=sel.map((p,i)=>{const h=m[p.id+'|'+d]||0;rowT+=h;tot[i]+=h;
+      const nv=novedadesDia(p,d);let exp=hab?esp:0;let nvTxt='';
+      for(const n of nv){if(n.dia)exp=0;else exp=Math.max(0,exp-n.h);nvTxt+=`<span class="nv">${esc((TIPO[n.t]?.nombre||n.t).split(' (')[0])}${n.h?' '+fmtH(n.h):''}</span>`}
+      let cls='';if(exp>0&&d<=hoy){if(h===0)cls='c-zero';else if(h+1e-6<exp)cls='c-low'}
+      return `<td class="r ${cls}">${h?fmtH(h):(exp>0&&d<=hoy?'0:00':'—')}${nvTxt}</td>`}).join('');
+    gran+=rowT;
+    return `<tr class="${w===6?'sat':''} ${fest?'fest':''}"><td style="white-space:nowrap">${DIAS[w]} ${fCorta(d)}${fest?' <span class="chip na">Festivo</span>':''}</td>${cells}${sel.length>1?`<td class="r"><b>${rowT?fmtH(rowT):'—'}</b></td>`:''}</tr>`}).join('');
+  document.getElementById('tbl-dia').innerHTML=`<thead><tr><th>Día</th>${sel.map((p,i)=>`<th class="r"><span class="who"><span class="dot" style="--c:${colorOf(p)}"></span>${esc(short[i])}</span></th>`).join('')}${sel.length>1?'<th class="r">Total</th>':''}</tr></thead><tbody>${body}</tbody>
+    <tfoot><tr><td>Total del rango</td>${tot.map(t=>`<td class="r">${fmtH(t)}</td>`).join('')}${sel.length>1?`<td class="r">${fmtH(gran)}</td>`:''}</tr></tfoot>`;
+}
+function destroyCharts(){for(const k in charts){charts[k].destroy();delete charts[k]}}
+function drawCharts(sel,rows,reqP,dLabels,acts,top10){
+  destroyCharts();
+  const fg2=cssVar('--fg-2'),fg3=cssVar('--fg-3'),grid=cssVar('--line'),surf=cssVar('--surface'),meta=cssVar('--meta');
+  Chart.defaults.color=fg2;Chart.defaults.font.family=cssVar('--body');Chart.defaults.font.size=12;Chart.defaults.borderColor=grid;
+  const tip={backgroundColor:cssVar('--fg'),titleColor:surf,bodyColor:surf,padding:10,cornerRadius:6,boxPadding:4};
+  const names=shortNames(sel);
+  const cols=sel.map(colorOf);
+  const lg=(el,items)=>document.getElementById(el).innerHTML=items.join('');
+
+  lg('lg-cumpl',[`<span><i class="sw" style="--c:${meta}"></i>Meta ajustada</span>`,`<span><i class="sw" style="--c:${fg2}"></i>Horas reportadas (color de cada persona)</span>`]);
+  charts.cumpl=new Chart(document.getElementById('ch-cumpl'),{type:'bar',data:{labels:names,datasets:[
+    {label:'Meta ajustada',data:rows.map(r=>+r.c.meta.toFixed(2)),backgroundColor:meta,borderRadius:4,borderSkipped:'start',categoryPercentage:.7,barPercentage:.9},
+    {label:'Reportadas',data:rows.map(r=>+r.c.rep.toFixed(2)),backgroundColor:cols,borderRadius:4,borderSkipped:'start',categoryPercentage:.7,barPercentage:.9}]},
+    options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tip,callbacks:{label:c=>`${c.dataset.label}: ${fmtH(c.raw)}`,afterBody:it=>{const r=rows[it[0].dataIndex].c;return r.pct==null?'':`Cumplimiento: ${fmtN(r.pct,0)}%`}}}},
+      scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:grid},border:{display:false},title:{display:true,text:'Horas',color:fg3}}}}});
+
+  charts.req=new Chart(document.getElementById('ch-req'),{type:'bar',data:{labels:names,datasets:[{label:'Requerimientos',data:reqP,backgroundColor:cols,borderRadius:4,borderSkipped:'start',maxBarThickness:56}]},
+    options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tip,callbacks:{label:c=>`${c.raw} requerimientos`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:grid},border:{display:false}}}}});
+
+  const byDay=sel.map(p=>{const m={};for(const x of acts)if(x.pid===p.id)m[x.fecha]=(m[x.fecha]||0)+x.min/60;return dLabels.map(d=>+(m[d]||0).toFixed(2))});
+  const ds=sel.map((p,i)=>({label:p.nombre,data:byDay[i],borderColor:cols[i],backgroundColor:cols[i],borderWidth:2,pointRadius:3,pointHoverRadius:6,pointBorderColor:surf,pointBorderWidth:1.5,tension:.25}));
+  ds.push({label:'Jornada',data:dLabels.map(d=>dow(d)===6?null:+S.cfg.horasDia),borderColor:fg3,borderDash:[5,4],borderWidth:1.5,pointRadius:0,pointHoverRadius:0,spanGaps:false});
+  lg('lg-dia',[...sel.map((p,i)=>`<span><i class="sw" style="--c:${cols[i]}"></i>${esc(p.nombre)}</span>`),`<span><i class="ln"></i>Jornada</span>`,`<span><i class="ln" style="width:0;height:14px;border-top:0;border-left:2px dotted var(--accent);margin-right:8px;vertical-align:-2px"></i>Sábado</span>`]);
+  const satColor=cssVar('--accent');
+  const sabados={id:'sabados',beforeDatasetsDraw(ch){const {ctx,chartArea:a,scales:{x}}=ch;ctx.save();ctx.strokeStyle=satColor;ctx.globalAlpha=.55;ctx.lineWidth=1.5;ctx.setLineDash([3,4]);
+    ctx.font='600 11px '+cssVar('--body');ctx.fillStyle=satColor;ctx.textAlign='center';
+    dLabels.forEach((d,i)=>{if(dow(d)!==6)return;const px=x.getPixelForValue(i);ctx.beginPath();ctx.moveTo(px,a.top);ctx.lineTo(px,a.bottom);ctx.stroke();ctx.globalAlpha=.9;ctx.textAlign=px>a.right-24?'right':px<a.left+24?'left':'center';ctx.fillText('Sáb '+Number(d.slice(8)),px,a.top-4);ctx.globalAlpha=.55});
+    ctx.restore()}};
+  charts.dia=new Chart(document.getElementById('ch-dia'),{type:'line',plugins:[sabados],data:{labels:dLabels.map(d=>`${DIAS[dow(d)]} ${fCorta(d)}${esFestivo(d)?'*':''}`),datasets:ds},
+    options:{maintainAspectRatio:false,layout:{padding:{top:16}},interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{...tip,filter:i=>i.dataset.label!=='Jornada',callbacks:{label:c=>`${c.dataset.label}: ${fmtH(c.raw)}`}}},
+      scales:{x:{grid:{display:false},ticks:{maxRotation:0,autoSkip:true,autoSkipPadding:12}},y:{beginAtZero:true,suggestedMax:9,grid:{color:grid},border:{display:false},title:{display:true,text:'Horas',color:fg3}}}}});
+
+  const cliLabels=top10.map(c=>c.cliente.length>28?c.cliente.slice(0,27)+'…':c.cliente);
+  lg('lg-cli',sel.length>1?sel.map((p,i)=>`<span><i class="sw" style="--c:${cols[i]}"></i>${esc(p.nombre)}</span>`):[]);
+  charts.cli=new Chart(document.getElementById('ch-cli'),{type:'bar',data:{labels:cliLabels,datasets:sel.map((p,i)=>({label:p.nombre,data:top10.map(c=>c.porP[p.id]?.size||0),backgroundColor:cols[i],borderColor:surf,borderWidth:{right:2},borderRadius:3,borderSkipped:false,maxBarThickness:22}))},
+    options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tip,callbacks:{title:it=>top10[it[0].dataIndex].cliente,label:c=>c.raw?`${c.dataset.label}: ${c.raw} req.`:null,footer:it=>{const c=top10[it[0].dataIndex];return `Total: ${c.req} req. · ${fmtH(c.horas)}`}}}},
+      scales:{x:{stacked:true,beginAtZero:true,ticks:{precision:0},grid:{color:grid},border:{display:false}},y:{stacked:true,grid:{display:false}}}}});
+}
+
+/* ================= Render: novedades ================= */
+function renderNov(){
+  const tf=document.getElementById('nvf-tipo');
+  fillTipoSelects();
+  const pById=Object.fromEntries(personas().map(p=>[p.id,p]));
+  let list=S.novedades.filter(n=>(S.nvf.colab==='todas'||n.colab===S.nvf.colab||n.colab==='todas')&&(S.nvf.tipo==='todos'||n.tipo===S.nvf.tipo));
+  list.sort((x,y)=>(y.desde||y.fecha||'').localeCompare(x.desde||x.fecha||''));
+  document.getElementById('nv-count').textContent=S.ready.nov?`${list.length} ${list.length===1?'novedad':'novedades'}`:'Cargando…';
+  const t=document.getElementById('tbl-nov');
+  if(S.ready.nov&&!list.length){t.innerHTML='<tbody><tr><td><div class="empty"><h3>Sin novedades registradas</h3><p>Registra aquí permisos, vacaciones, incapacidades, licencias, tiempos muertos o días no laborables. Se descuentan automáticamente de la meta en el tablero.</p></div></td></tr></tbody>';return}
+  t.innerHTML='<thead><tr><th>Colaboradora</th><th>Tipo</th><th>Fecha</th><th class="r">Descuenta</th><th>Observación</th><th></th></tr></thead><tbody>'+
+    list.map(n=>{const p=pById[n.colab];
+      const f=n.unidad==='dias'?(n.desde===n.hasta?fLarga(n.desde):`${fCorta(n.desde)} – ${fLarga(n.hasta)}`):fLarga(n.fecha);
+      const dur=n.unidad==='dias'?`${habilesEntre(n.desde,n.hasta)} d hábiles · ${fmtH(durNovedad(n))}`:fmtH(n.horas);
+      return `<tr><td>${n.colab==='todas'?'<b>Todas</b>':`<span class="who"><span class="dot" style="--c:${colorOf(p||{})}"></span>${esc(p?.nombre||'(eliminada)')}</span>`}</td>
+      <td>${esc(TIPO[n.tipo]?.nombre||n.tipo)}</td><td class="num" style="white-space:nowrap">${f}</td><td class="r num" style="white-space:nowrap">${dur}</td>
+      <td class="wrapcell small">${esc(n.nota||'')}</td>
+      <td class="r"><button class="btn sm danger" data-del-nov="${esc(n._id)}" data-write>${txtBorrar(n._id)}</button></td></tr>`}).join('')+'</tbody>';
+  t.querySelectorAll('[data-write]').forEach(el=>el.disabled=!canWrite);
+}
+function syncNovForm(){
+  const tipo=document.getElementById('nv-tipo').value;
+  const u=document.querySelector('input[name="nv-unidad"]:checked').value;
+  document.querySelectorAll('.nv-dias').forEach(e=>e.hidden=u!=='dias');
+  document.querySelectorAll('.nv-horas').forEach(e=>e.hidden=u!=='horas');
+  const col=document.getElementById('nv-colab');
+  if(tipo==='festivo'){col.value='todas';col.disabled=true;document.getElementById('nv-u-dias').checked=true;document.getElementById('nv-u-horas').disabled=true;
+    document.querySelectorAll('.nv-dias').forEach(e=>e.hidden=false);document.querySelectorAll('.nv-horas').forEach(e=>e.hidden=true)}
+  else{col.disabled=false;document.getElementById('nv-u-horas').disabled=false}
+  const md=metaDia();
+  document.getElementById('nv-help').textContent=tipo==='festivo'
+    ? 'El día no laborable se aplica a todo el equipo: deja de contar como día hábil en la meta.'
+    : (document.querySelector('input[name="nv-unidad"]:checked').value==='dias'
+      ? `Cada día hábil (lunes a viernes, sin festivos) descuenta ${fmtH(md)} de la meta. Los sábados no se cuentan.`
+      : 'Las horas registradas se descuentan tal cual de la meta del día indicado.');
+}
+
+/* ================= Render: carga ================= */
+let ldF={desde:'',hasta:'',user:''};
+const ldEnRango=r=>(!ldF.desde||r[5]>=ldF.desde)&&(!ldF.hasta||r[5]<=ldF.hasta);
+const ldDocOk=d=>!ldF.user||String(d.codigo).toUpperCase()===ldF.user;
+function renderLoaded(){
+  const t=document.getElementById('tbl-loaded');
+  const pmap=codeMap();const pById=Object.fromEntries(personas().map(p=>[p.id,p]));
+  const sel=document.getElementById('ld-user');
+  const codes=[...new Set(Object.values(S.act).map(d=>String(d.codigo).toUpperCase()))].sort();
+  if(document.activeElement!==sel){sel.innerHTML='<option value="">Todas</option>'+codes.map(c=>{const p=pById[pmap[c]];return `<option value="${esc(c)}">${esc(c)}${p?' · '+esc(p.nombre):''}</option>`}).join('');sel.value=codes.includes(ldF.user)?ldF.user:''}
+  for(const [k,v] of [['ld-desde',ldF.desde],['ld-hasta',ldF.hasta]]){const el=document.getElementById(k);if(document.activeElement!==el)el.value=v}
+  const conFecha=!!(ldF.desde||ldF.hasta);
+  const docs=Object.entries(S.act).filter(([id,d])=>ldDocOk(d)&&(!conFecha||(d.rows||[]).some(ldEnRango))).sort((x,y)=>(y[1].mes||'').localeCompare(x[1].mes||'')||String(x[1].codigo).localeCompare(String(y[1].codigo)));
+  renderRangoCarga(docs,pById,pmap);
+  if(!S.ready.act){t.innerHTML='<tbody><tr><td class="muted">Cargando…</td></tr></tbody>';return}
+  if(!Object.keys(S.act).length){t.innerHTML='<tbody><tr><td><div class="empty"><h3>Todavía no hay datos cargados</h3><p>Sube el primer informe del CRM arriba.</p></div></td></tr></tbody>';return}
+  if(!docs.length){t.innerHTML='<tbody><tr><td><div class="empty"><h3>No hay actividades cargadas con ese filtro</h3><p>Cambia las fechas o el usuario, o quita el filtro.</p></div></td></tr></tbody>';return}
+  t.innerHTML=`<thead><tr><th>Usuario CRM</th><th>Colaboradora</th><th>Mes</th><th class="r">Actividades${conFecha?' en el rango':''}</th><th class="r">Horas${conFecha?' en el rango':''}</th><th>Fechas</th><th>Actualizado</th><th></th></tr></thead><tbody>`+
+    docs.map(([id,d])=>{const code=String(d.codigo).toUpperCase();const p=pById[pmap[code]];const rows=(d.rows||[]).filter(ldEnRango);
+      const fs=rows.map(r=>r[5]).sort();const h=rows.reduce((s,r)=>s+(+r[4]||0),0)/60;
+      const [yy,mm]=String(d.mes).split('-');
+      return `<tr><td class="num"><b>${esc(code)}</b></td><td>${p?`<span class="who"><span class="dot" style="--c:${colorOf(p)}"></span>${esc(p.nombre)}</span>`:'<span class="chip warn">Sin asignar</span>'}</td>
+      <td>${MESES[+mm-1]||mm} ${yy}</td><td class="r">${rows.length}</td><td class="r">${fmtH(h)}</td>
+      <td class="num small">${fs.length?fCorta(fs[0])+' – '+fCorta(fs[fs.length-1]):'—'}</td><td class="small muted">${d.actualizado?new Date(d.actualizado).toLocaleString('es-CO',{dateStyle:'medium',timeStyle:'short'}):''}</td>
+      <td class="r">${isAdmin?`<button class="btn sm danger" data-del-act="${esc(id)}" data-write>${txtBorrar(id)}</button>`:''}</td></tr>`}).join('')+'</tbody>';
+  t.querySelectorAll('[data-write]').forEach(el=>el.disabled=!canWrite);
+}
+
+function renderRangoCarga(docs,pById,pmap){
+  const box=document.getElementById('ld-rango');
+  if(!ldF.desde&&!ldF.hasta){box.hidden=true;box.innerHTML='';return}
+  box.hidden=false;
+  let n=0,min=0;const us=new Set();
+  for(const [,d] of docs)for(const r of d.rows||[])if(ldEnRango(r)){n++;min+=(+r[4]||0);us.add(String(d.codigo).toUpperCase())}
+  const quien=ldF.user?`${esc(ldF.user)}${pById[pmap[ldF.user]]?' · '+esc(pById[pmap[ldF.user]].nombre):''}`:'todas las usuarias';
+  const txt=ldF.desde&&ldF.hasta?`Del ${fLarga(ldF.desde)} al ${fLarga(ldF.hasta)}`:ldF.desde?`Desde el ${fLarga(ldF.desde)}`:`Hasta el ${fLarga(ldF.hasta)}`;
+  let accion='';
+  if(!n)accion='';
+  else if(!isAdmin)accion='<span class="small muted">Solo las administradoras pueden eliminar datos cargados.</span>';
+  else if(!(ldF.desde&&ldF.hasta))accion='<span class="small muted">Elige Desde y Hasta para poder eliminar el rango.</span>';
+  else accion=`<button class="btn sm danger" type="button" id="ld-del" ${canWrite?'':'disabled'}>${armado.k==='ld-del'&&Date.now()-armado.t<=4000?'¿Confirmar?':`Eliminar ${fmtN(n)} actividades del rango`}</button>`;
+  box.innerHTML=`<div class="banner" style="justify-content:space-between;flex-wrap:wrap;gap:10px"><span><b>${txt}</b> · ${quien}: ${n?`${fmtN(n)} actividades, ${fmtH(min/60)} de ${us.size} usuario${us.size===1?'':'s'}.`:'no hay actividades cargadas en ese rango.'}${n&&isAdmin&&ldF.desde&&ldF.hasta?' Al eliminar se borran solo las actividades de esas fechas; lo demás del mes se conserva.':''}</span>${accion}</div>`;
+}
+async function eliminarRangoCarga(){
+  const {desde,hasta}=ldF;if(!desde||!hasta||!db)return 0;
+  let n=0;
+  for(const [id,d] of Object.entries(S.act)){
+    if(!ldDocOk(d))continue;
+    const rows=d.rows||[];const keep=rows.filter(r=>r[5]<desde||r[5]>hasta);
+    if(keep.length===rows.length)continue;n+=rows.length-keep.length;
+    if(!keep.length)await db.doc('actividades/'+id).delete();
+    else await db.doc('actividades/'+id).set({codigo:d.codigo,mes:d.mes,rows:keep,actualizado:new Date().toISOString()});
+  }
+  return n;
+}
+
+/* --- lectura del Excel --- */
+const HDR={ticket:['ticket'],act:['act','actividad no','no act','#act'],actividad:['actividad','descripcion'],usuario:['usuario','user'],linea:['nombre','linea','producto'],horas:['horas','tiempo','duracion'],fecha:['fecha'],cliente:['cliente','empresa']};
+function serialToISO(v){return iso(new Date(Math.round((v-25569)*86400000)))}
+function parseFecha(v){
+  if(v==null||v==='')return null;
+  if(typeof v==='number')return serialToISO(v);
+  if(v instanceof Date)return `${v.getFullYear()}-${pad(v.getMonth()+1)}-${pad(v.getDate())}`;
+  const s=String(v).trim();let m=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/);if(m)return `${m[3]}-${pad(m[2])}-${pad(m[1])}`;
+  m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return `${m[1]}-${m[2]}-${m[3]}`;return null;
+}
+function parseMin(v){
+  if(v==null||v==='')return 0;
+  if(typeof v==='number')return Math.round(v*1440);
+  const s=String(v).trim();const m=s.match(/^(\d+):(\d{1,2})(?::(\d{1,2}))?$/);if(m)return (+m[1])*60+(+m[2]);
+  const n=parseFloat(s.replace(',','.'));return isFinite(n)?Math.round(n*60):0;
+}
+function parseWorkbook(buf,name){
+  const csv=/\.(csv|txt)$/i.test(name||'');
+  const wb=csv?XLSX.read(new TextDecoder('utf-8').decode(buf).replace(/^﻿/,''),{type:'string',raw:true}):XLSX.read(buf,{type:'array'});const out=[];const errs=[];
+  for(const sn of wb.SheetNames){
+    const aoa=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,raw:true,defval:null});
+    let hi=-1,col={};
+    for(let i=0;i<Math.min(aoa.length,15);i++){const r=aoa[i].map(norm);if(r.includes('ticket')&&r.includes('fecha')){hi=i;
+      for(const [k,al] of Object.entries(HDR)){const j=r.findIndex(c=>al.includes(c));if(j>=0)col[k]=j}break}}
+    if(hi<0)continue;
+    const need=['ticket','horas','fecha','usuario','cliente'].filter(k=>col[k]==null);
+    if(need.length){errs.push(`La hoja “${sn}” no tiene las columnas: ${need.join(', ')}.`);continue}
+    for(let i=hi+1;i<aoa.length;i++){const r=aoa[i];const tk=r[col.ticket];const f=parseFecha(r[col.fecha]);
+      if(tk==null||!isFinite(Number(tk))||!f)continue;
+      out.push({code:String(r[col.usuario]||'').trim().toUpperCase(),ticket:String(Math.round(Number(tk))),act:col.act!=null?(r[col.act]==null?'':Number(r[col.act])):'',
+        actividad:String(r[col.actividad]??'').trim(),linea:String(r[col.linea]??'').trim(),min:parseMin(r[col.horas]),fecha:f,cliente:String(r[col.cliente]??'').trim()});
+    }
+  }
+  return {rows:out,errs};
+}
+async function handleFile(file){
+  const pv=document.getElementById('preview');pv.hidden=false;pv.innerHTML='<p class="muted">Leyendo archivo…</p>';
+  try{
+    const buf=await file.arrayBuffer();const {rows,errs}=parseWorkbook(buf,file.name);
+    if(!rows.length){pv.innerHTML=`<div class="banner warn"><span>No encontré actividades en <b>${esc(file.name)}</b>. Revisa que el archivo tenga una fila de encabezados con Ticket, Usuario, Horas, Fecha y Cliente. ${errs.map(esc).join(' ')}</span></div>`;preview=null;return}
+    const seen=new Set();let dup=0;const by={};
+    for(const r of rows){if(r.act!==''){const k=[r.code,r.ticket,r.act,r.fecha,r.min,r.actividad,r.cliente].join('|');if(seen.has(k)){dup++;continue}seen.add(k)}
+      (by[r.code]??={code:r.code,rows:[]}).rows.push(r)}
+    preview={name:file.name,groups:Object.values(by),errs,dup};renderPreview();
+  }catch(e){pv.innerHTML=`<div class="banner warn"><span>No pude leer el archivo: ${esc(e.message||e)}. Debe ser un Excel (.xlsx o .xls) exportado del CRM.</span></div>`;preview=null}
+}
+function renderPreview(){
+  const pv=document.getElementById('preview');if(!preview){pv.hidden=true;return}
+  const map=codeMap();const real=S.colabs;
+  pv.innerHTML=`<h3 style="font-size:16px;margin-bottom:8px">${esc(preview.name)}</h3>
+  ${preview.errs.length?`<div class="banner warn" style="margin-bottom:10px"><span>${preview.errs.map(esc).join(' ')}</span></div>`:''}
+  ${preview.dup?`<div class="banner" style="margin-bottom:10px"><span>El archivo traía ${fmtN(preview.dup)} fila${preview.dup===1?'':'s'} repetida${preview.dup===1?'':'s'} (misma actividad del CRM); se cargará${preview.dup===1?'':'n'} una sola vez.</span></div>`:''}
+  <div class="tbl-wrap"><table><thead><tr><th>Usuario CRM</th><th class="r">Actividades</th><th class="r">Horas</th><th>Fechas</th><th>Asignar a</th></tr></thead><tbody>${
+    preview.groups.map((g,i)=>{const fs=g.rows.map(r=>r.fecha).sort();const h=g.rows.reduce((s,r)=>s+r.min,0)/60;
+      return `<tr><td class="num"><b>${esc(g.code||'(vacío)')}</b></td><td class="r">${g.rows.length}</td><td class="r">${fmtH(h)}</td><td class="num">${fLarga(fs[0])} – ${fLarga(fs[fs.length-1])}</td>
+      <td><select id="pv-map-${i}" data-pv="${i}" ${isAdmin?'':'disabled title="Solo la administradora asigna usuarios"'}><option value="">Sin asignar por ahora</option>${real.map(c=>`<option value="${esc(c.id)}" ${map[g.code]===c.id?'selected':''}>${esc(c.nombre)}</option>`).join('')}</select></td></tr>`}).join('')
+  }</tbody></table></div>
+  <p class="help">Al guardar, las actividades de cada usuario entre la primera y la última fecha del archivo reemplazan lo que ya estuviera cargado en esas fechas.</p>
+  <div class="form-actions"><button class="btn primary" id="pv-save" data-write ${canWrite?'':'disabled'}>Guardar en el tablero</button><button class="btn" id="pv-cancel">Descartar</button><span class="status" id="pv-status"></span></div>`;
+}
+const docIdFor=(code,mes)=>(code.replace(/[^A-Za-z0-9_.~:@+\-]/g,'-')||'SIN-USUARIO')+'_'+mes;
+async function savePreview(){
+  if(!preview||!db)return;
+  const st=document.getElementById('pv-status');const btn=document.getElementById('pv-save');btn.disabled=true;st.className='status';st.textContent='Guardando…';
+  try{
+    // asignaciones
+    let changed=false;const lista=S.colabs.map(c=>({...c}));
+    preview.groups.forEach((g,i)=>{const v=document.getElementById('pv-map-'+i).value;if(!v||!g.code)return;
+      for(const c of lista){const cs=codesOf(c);if(c.id===v&&!cs.includes(g.code)){c.codigos=[...cs,g.code].join(', ');changed=true}
+        else if(c.id!==v&&cs.includes(g.code)){c.codigos=cs.filter(x=>x!==g.code).join(', ');changed=true}}});
+    if(changed&&isAdmin)await db.doc('config/colaboradoras').set({lista});
+    let nuevos=0,reempl=0,docs=0;
+    for(const g of preview.groups){
+      const fs=g.rows.map(r=>r.fecha).sort();const f1=fs[0],f2=fs[fs.length-1];
+      const byMes={};for(const r of g.rows)(byMes[r.fecha.slice(0,7)]??=[]).push(r);
+      // meses tocados por el rango (para limpiar)
+      const meses=new Set(Object.keys(byMes));for(const [id,d] of Object.entries(S.act))if(String(d.codigo).toUpperCase()===g.code&&d.mes>=f1.slice(0,7)&&d.mes<=f2.slice(0,7))meses.add(d.mes);
+      for(const mes of [...meses].sort()){
+        const id=docIdFor(g.code,mes);const prev=(S.act[id]?.rows)||[];
+        const keep=prev.filter(r=>r[5]<f1||r[5]>f2);reempl+=prev.length-keep.length;
+        const nuevosRows=(byMes[mes]||[]).map(r=>[r.ticket,r.act,r.actividad,r.linea,r.min,r.fecha,r.cliente]);nuevos+=nuevosRows.length;
+        const all=[...keep,...nuevosRows].sort((x,y)=>x[5]<y[5]?-1:x[5]>y[5]?1:0);
+        if(!all.length){await db.doc('actividades/'+id).delete();continue}
+        await db.doc('actividades/'+id).set({codigo:g.code,mes,rows:all,actualizado:new Date().toISOString()});docs++;
+      }
+    }
+    toast(`Se guardaron ${fmtN(nuevos)} actividades`);
+    st.className='status ok';st.textContent=`Listo: ${fmtN(nuevos)} actividades guardadas${reempl?` (${fmtN(reempl)} registros anteriores de esas fechas reemplazados)`:''}.`;
+    preview=null;setTimeout(()=>{if(!preview){document.getElementById('preview').hidden=true}},4000);
+  }catch(e){st.className='status bad';st.textContent=errMsg(e);btn.disabled=false}
+}
+function errMsg(e){const c=e&&e.code;
+  if(c==='forbidden'||c==='auth')return e.message;
+  if(c==='invalid_argument')return 'El servidor rechazó los datos: '+(e.message||'revisa el archivo')+'.';
+  if(c==='unavailable')return 'No se pudo guardar: no hay conexión con Supabase. Revisa tu internet e intenta de nuevo.';
+  if(c==='resource_exhausted')return 'Demasiadas operaciones seguidas. Espera unos segundos e intenta de nuevo.';
+  return 'No se pudo guardar. Revisa tu conexión e intenta de nuevo.'}
+
+/* ================= Render: configuración ================= */
+function renderCfg(){
+  const c=S.cfg;
+  const set=(id,v)=>{const el=document.getElementById(id);if(document.activeElement!==el)el.value=v};
+  set('c-hs',c.horasSemana);set('c-hsab',c.horasSabado??4);set('c-hd',c.horasDia);set('c-dm',c.descansoMin);set('c-dc',c.descansoCadaH);set('c-per',c.periodo);set('c-ok',c.umbralOk);set('c-al',c.umbralAlerta);
+  document.getElementById('c-desc').checked=!!c.descuentaDescanso;
+  const sem=c.horasSemana*factorReporte();
+  document.getElementById('cfg-resumen').textContent=`Meta de reporte: ${fmtH(metaDia())} por día hábil · ${fmtH(sem)} por semana · ${fmtH(sem*2)} por quincena · ${fmtH(metaSab())} por sábado laborado.`;
+  if(!colabDraft)colabDraft=S.colabs.map(x=>({...x}));
+  const L=document.getElementById('colab-list');
+  if(!L.contains(document.activeElement)){
+    L.innerHTML=(colabDraft.length?'':'<p class="muted">No hay colaboradoras. Agrega la primera.</p>')+colabDraft.map((x,i)=>`<div class="colab-row">
+      <div class="field"><label for="cb-n-${i}">Nombre</label><input type="text" id="cb-n-${i}" data-cb="${i}" data-f="nombre" value="${esc(x.nombre)}"></div>
+      <div class="field"><label for="cb-c-${i}">Usuario CRM</label><input type="text" id="cb-c-${i}" data-cb="${i}" data-f="codigos" value="${esc(x.codigos||'')}" placeholder="CNS.15"></div>
+      <div class="field"><span class="lbl">Color</span><div class="swatches">${[0,1,2,3,4,5].map(k=>`<button type="button" aria-label="Color ${k+1}" aria-pressed="${(x.color??0)===k}" data-sw="${i}" data-k="${k}" style="--c:var(--s${k+1})"></button>`).join('')}</div></div>
+      <div><button class="btn sm danger" type="button" data-rm="${i}">Quitar</button></div></div>`).join('');
+  }
+  if(!tiposDraft)tiposDraft=TIPOS.map(t=>({...t}));
+  const TL=document.getElementById('tipos-list');
+  if(!TL.contains(document.activeElement)){
+    const usados={};for(const n of S.novedades)usados[n.tipo]=(usados[n.tipo]||0)+1;
+    TL.innerHTML=tiposDraft.map((t,i)=>`<div class="colab-row" style="grid-template-columns:minmax(0,1.6fr) minmax(0,0.8fr) minmax(0,0.8fr) auto">
+      <div class="field"><label for="tp-n-${i}">Nombre</label><input type="text" id="tp-n-${i}" data-tp="${i}" data-f="nombre" value="${esc(t.nombre)}"></div>
+      <div class="field"><label for="tp-u-${i}">Se registra por</label><select id="tp-u-${i}" data-tp="${i}" data-f="u" ${t.id==='festivo'?'disabled':''}><option value="dias" ${t.u==='dias'?'selected':''}>Días</option><option value="horas" ${t.u==='horas'?'selected':''}>Horas</option></select></div>
+      <div class="small muted">${usados[t.id]?`${usados[t.id]} registrada${usados[t.id]===1?'':'s'}`:'Sin novedades'}</div>
+      <div>${t.id==='festivo'?'<span class="chip na">Fijo</span>':`<button class="btn sm danger" type="button" data-tp-rm="${i}" ${usados[t.id]?'disabled title="Tiene novedades registradas"':''}>Quitar</button>`}</div></div>`).join('');
+  }
+  const ys=document.getElementById('fest-year');if(document.activeElement!==ys)ys.value=festYear;
+  const fa=festivosAnio(festYear);
+  if(!festDraft||festDraft.y!==festYear)festDraft={y:festYear,lista:fa.lista.map(x=>[...x]),dirty:false};
+  const L2=[...festDraft.lista].sort((p,q)=>p[0]<q[0]?-1:1);
+  document.getElementById('fest-src').innerHTML=(fa.fuente==='guardado'?`<span class="chip ok">Lista guardada para ${festYear}</span>`:`<span class="chip na">Calculados automáticamente para ${festYear}</span>`)+
+    (festDraft.dirty?' <span class="chip warn">Cambios sin guardar</span>':'')+` <span class="small muted">${L2.length} festivos</span>`;
+  document.getElementById('fest-list').innerHTML=L2.length?L2.map(([d,n])=>`<div><span>${esc(n)}</span><span style="display:flex;align-items:center;gap:6px"><span class="num muted">${DIAS[dow(d)]} ${fCorta(d)}</span>${canWrite?`<button class="x" type="button" aria-label="Quitar ${esc(n)}" data-fest-rm="${d}">×</button>`:''}</span></div>`).join(''):'<p class="muted">Este año no tiene festivos en la lista.</p>';
+  document.getElementById('fest-reset').hidden=fa.fuente!=='guardado';
+  const fd=document.getElementById('fest-d');fd.min=festYear+'-01-01';fd.max=festYear+'-12-31';
+  document.getElementById('cfg-ro').hidden=isAdmin;
+  renderLineas();
+  document.getElementById('usr-panel').hidden=!isAdmin;if(isAdmin&&!usrCargados)cargarUsuarios();
+  document.getElementById('bk-import-lbl').hidden=!isAdmin;
+  const soloLectura=!canWrite||!isAdmin;
+  document.querySelectorAll('#view-cfg [data-write], #view-cfg input, #view-cfg select, #view-cfg button').forEach(el=>{if(el.id==='fest-year'||el.id==='bk-export')return;
+    if(soloLectura){if(!el.disabled){el.disabled=true;el.dataset.ro='1'}}else if(el.dataset.ro==='1'){el.disabled=false;delete el.dataset.ro}});
+}
+
+/* ================= Rango ================= */
+function setPreset(p){
+  S.preset=p;const d=hoy;const y=d.slice(0,8);const day=+d.slice(8);
+  if(p==='semana'){const w=dow(d);const lun=add(d,-((w+6)%7));S.desde=lun;S.hasta=add(lun,5)}
+  else if(p==='quincena'){if(day<=15){S.desde=y+'01';S.hasta=y+'15'}else{S.desde=y+'16';S.hasta=finMes(d)}}
+  else if(p==='quincena_ant'){if(day<=15){const pm=add(y+'01',-1);S.desde=pm.slice(0,8)+'16';S.hasta=pm}else{S.desde=y+'01';S.hasta=y+'15'}}
+  else if(p==='mes'){S.desde=y+'01';S.hasta=finMes(d)}
+  else if(p==='mes_ant'){const pm=add(y+'01',-1);S.desde=pm.slice(0,8)+'01';S.hasta=pm}
+  render();
+}
+
+
+
+/* ================= Respaldo y traslado ================= */
+let respaldoPend=null;
+function armarRespaldo(){
+  return {app:'seguimiento-soporte',formato:1,origen:ES_LOCAL?'local':'web',exportado:new Date().toISOString(),
+    general:{...S.cfg},colaboradoras:S.colabs.map(c=>({id:c.id,nombre:c.nombre,codigos:c.codigos||'',color:c.color??0})),
+    tipos:TIPOS.map(t=>({id:t.id,nombre:t.nombre,u:t.u})),actividades:S.act,sabados:S.sab||{},
+    novedades:S.novedades.map(({_id,...n})=>n),festivos:Object.fromEntries(Object.entries(S.festDb).map(([y,f])=>[y,{anio:+y,lista:f.lista||[]}]))};
+}
+async function exportarDatos(){
+  const st=document.getElementById('bk-status');st.className='status';
+  try{const txt=JSON.stringify(armarRespaldo());await guardarArchivo(`respaldo_seguimiento_${hoy}.json`,new TextEncoder().encode(txt),'application/json','Respaldo descargado');
+    st.className='status ok';st.textContent='Respaldo exportado.'}
+  catch(e){st.className='status bad';st.textContent=e&&e.code==='declined'?'Descarga cancelada.':'No se pudo exportar.'}
+}
+function resumenRespaldo(d){
+  const meses=Object.values(d.actividades||{});const nAct=meses.reduce((s,m)=>s+((m.rows||[]).length),0);
+  const fs=meses.flatMap(m=>(m.rows||[]).map(r=>r[5])).sort();
+  return `<b>${nAct.toLocaleString('es-CO')}</b> actividades en ${meses.length} ${meses.length===1?'mes cargado':'registros de usuario y mes'}${fs.length?` (${fLarga(fs[0])} a ${fLarga(fs.at(-1))})`:''} · <b>${(d.novedades||[]).length}</b> ${(d.novedades||[]).length===1?'novedad':'novedades'} · <b>${(d.colaboradoras||[]).length}</b> colaboradoras · <b>${Object.keys(d.festivos||{}).length}</b> ${Object.keys(d.festivos||{}).length===1?'año':'años'} de festivos guardados`;
+}
+async function leerRespaldo(file){
+  const st=document.getElementById('bk-status'),pv=document.getElementById('bk-preview');st.className='status';st.textContent='';
+  try{
+    const d=JSON.parse(await file.text());
+    if(d.app!=='seguimiento-soporte'||typeof d.actividades!=='object')throw new Error('El archivo no es un respaldo de este tablero.');
+    respaldoPend=d;pv.hidden=false;
+    pv.innerHTML=`<div class="banner warn" style="flex-direction:column;align-items:flex-start;gap:8px"><span><b>${esc(file.name)}</b> · exportado desde la versión ${d.origen==='local'?'local':'web'} el ${esc(new Date(d.exportado).toLocaleString('es-CO',{dateStyle:'medium',timeStyle:'short'}))}</span>
+      <span>${resumenRespaldo(d)}</span>
+      <span>Al importar, <b>se reemplazan todos los datos actuales</b> de este tablero (hoy: ${resumenRespaldo(armarRespaldo())}).</span>
+      <span class="form-actions" style="margin:0"><button class="btn primary" type="button" id="bk-apply">Reemplazar los datos actuales</button><button class="btn" type="button" id="bk-cancel">Cancelar</button></span></div>`;
+  }catch(e){respaldoPend=null;pv.hidden=true;st.className='status bad';st.textContent=e.message&&!/JSON/.test(e.message)?e.message:'No se pudo leer el archivo: debe ser un respaldo .json exportado desde este tablero.'}
+}
+async function aplicarRespaldo(d){
+  enLote=true;omitidasLote=0;
+  try{await aplicarRespaldoLote(d)}finally{enLote=false;await refrescar().catch(()=>{})}
+  avisoImport=omitidasLote?`${omitidasLote} novedad(es) no se importaron porque su colaboradora no está en el respaldo.`:'';
+}
+async function aplicarRespaldoLote(d){
+  const actIds=Object.keys(S.act),novIds=S.novedades.map(n=>n._id),festYs=Object.keys(S.festDb);
+  await db.doc('config/general').set({...DEF_CFG,...(d.general||{})});
+  await db.doc('config/colaboradoras').set({lista:d.colaboradoras||[]});
+  if(Array.isArray(d.tipos)&&d.tipos.length)await db.doc('config/tipos').set({lista:d.tipos});
+  for(const id of actIds)if(!(id in d.actividades))await db.doc('actividades/'+id).delete();
+  for(const [id,doc] of Object.entries(d.actividades))await db.doc('actividades/'+id).set({codigo:doc.codigo,mes:doc.mes,rows:doc.rows||[],actualizado:doc.actualizado||new Date().toISOString()});
+  for(const id of novIds)await db.collection('novedades').doc(id).delete();
+  for(const n of d.novedades||[]){const {_id,...x}=n;await db.collection('novedades').add(x)}
+  for(const y of festYs)if(!(y in (d.festivos||{})))await db.doc('festivos/'+y).delete();
+  for(const [y,f] of Object.entries(d.festivos||{}))await db.doc('festivos/'+y).set({anio:+y,lista:f.lista||[]});
+  for(const id of Object.keys(S.sab||{}))if(!(id in (d.sabados||{})))await db.doc('sabados/'+id).delete();
+  for(const [id,x] of Object.entries(d.sabados||{}))await db.doc('sabados/'+id).set({codigo:x.codigo,anio:x.anio,fechas:x.fechas||[],actualizado:x.actualizado||new Date().toISOString()});
+}
+document.getElementById('bk-export').addEventListener('click',exportarDatos);
+document.getElementById('bk-file').addEventListener('change',e=>{const f=e.target.files[0];if(f)leerRespaldo(f);e.target.value=''});
+document.getElementById('bk-preview').addEventListener('click',async e=>{
+  if(e.target.id==='bk-cancel'){respaldoPend=null;document.getElementById('bk-preview').hidden=true;return}
+  if(e.target.id!=='bk-apply'||!respaldoPend)return;
+  if(!isAdmin){toast('Solo las administradoras pueden importar datos.');return}
+  await twoStep(e.target,async()=>{
+    const st=document.getElementById('bk-status');st.className='status';st.textContent='Importando…';
+    try{await aplicarRespaldo(respaldoPend);respaldoPend=null;document.getElementById('bk-preview').hidden=true;st.className='status ok';st.textContent='Datos importados.'+(avisoImport?' '+avisoImport:'')}
+    catch(err){st.className='status bad';st.textContent='La importación no terminó: '+errMsg(err)+(ES_LOCAL?' Los datos anteriores no se modificaron.':' Revisa los datos e intenta de nuevo.');throw err}
+  },'Datos importados');
+});
+
+
+/* ================= Exportar novedades a Excel ================= */
+async function exportarNovedades(){
+  const pById=Object.fromEntries(personas().map(p=>[p.id,p]));
+  const list=S.novedades.filter(n=>(S.nvf.colab==='todas'||n.colab===S.nvf.colab||n.colab==='todas')&&(S.nvf.tipo==='todos'||n.tipo===S.nvf.tipo))
+    .sort((x,y)=>(x.desde||x.fecha||'').localeCompare(y.desde||y.fecha||''));
+  if(!list.length){toast('No hay novedades para exportar con los filtros actuales.');return}
+  const r2=n=>Math.round(n*100)/100;
+  const filas=[['Colaboradora','Tipo','Se registra por','Desde / fecha','Hasta','Días hábiles','Horas descontadas','Observación','Registrada el'],
+    ...list.map(n=>[n.colab==='todas'?'Todas':(pById[n.colab]?.nombre||n.colab),TIPO[n.tipo]?.nombre||n.tipo,n.unidad==='dias'?'Días':'Horas',
+      n.unidad==='dias'?n.desde:n.fecha,n.unidad==='dias'?n.hasta:'',n.unidad==='dias'?habilesEntre(n.desde,n.hasta):'',r2(durNovedad(n)),n.nota||'',
+      n.creado?new Date(n.creado).toLocaleString('es-CO'):''])];
+  const ws=XLSX.utils.aoa_to_sheet(filas);ws['!cols']=[32,28,14,14,12,12,17,45,20].map(w=>({wch:w}));
+  const filtro=[S.nvf.colab==='todas'?'Todas las personas':(pById[S.nvf.colab]?.nombre||S.nvf.colab),S.nvf.tipo==='todos'?'Todos los tipos':(TIPO[S.nvf.tipo]?.nombre||S.nvf.tipo)];
+  XLSX.utils.sheet_add_aoa(ws,[[],[`Filtros: ${filtro.join(' · ')}`],[`Exportado: ${new Date().toLocaleString('es-CO')}`],['Horas descontadas: por días = días hábiles × '+fmtH(metaDia())+' de meta diaria; por horas = horas registradas.']],{origin:-1});
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Novedades');
+  const quien=S.nvf.colab==='todas'?'todas':(pById[S.nvf.colab]?.nombre||'').split(' ')[0].toLowerCase();
+  try{await guardarArchivo(`Novedades_${quien}_${hoy}.xlsx`,XLSX.write(wb,{bookType:'xlsx',type:'array'}),null,'Novedades exportadas')}
+  catch(e){toast(e&&e.code==='declined'?'Descarga cancelada.':'No se pudo exportar.')}
+}
+document.getElementById('nv-xlsx').addEventListener('click',exportarNovedades);
+
+const PDF_LIBS=['lib/html2canvas.min.js','lib/jspdf.umd.min.js'];
+
+/* ================= Informe PDF (mismo diseño del tablero) ================= */
+const cargarScript=src=>new Promise((ok,mal)=>{if(document.querySelector(`script[data-src="${src}"]`)){ok();return}
+  const s=document.createElement('script');s.src=src;s.dataset.src=src;s.onload=()=>ok();s.onerror=()=>mal(new Error('No se pudo cargar '+src));document.head.appendChild(s)});
+const esperar=ms=>new Promise(r=>setTimeout(r,ms));
+const cuadro=()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+async function descargarPDF(){
+  const btn=document.getElementById('btn-pdf');
+  if(document.getElementById('dash-body').hidden){toast('No hay actividades en el rango elegido.');return}
+  btn.disabled=true;const txt=btn.textContent;btn.textContent='Generando…';
+  const root=document.documentElement,temaPrevio=root.getAttribute('data-theme'),animPrev=Chart.defaults.animation;
+  let head=null;
+  try{
+    await Promise.all(PDF_LIBS.map(cargarScript));
+    if(S.tab!=='dash')setTab('dash');
+    // Siempre en tema claro y sin animaciones, con ancho fijo
+    Chart.defaults.animation=false;root.setAttribute('data-theme','light');document.body.classList.add('pdf-mode');
+    const ps=personas();const quienTxt=S.colab==='todas'?'Todas las colaboradoras':(ps.find(p=>p.id===S.colab)?.nombre||'');
+    head=document.createElement('div');head.className='pdf-head';
+    head.innerHTML=`<div><h2>Seguimiento Mesa de Soporte</h2><p>Informe de horas reportadas en el CRM, novedades y requerimientos</p></div>
+      <div class="meta">Periodo: <b>${fLarga(S.desde)} a ${fLarga(S.hasta)}</b><br>Responsable: <b>${esc(quienTxt)}</b><br>Generado: ${esc(new Date().toLocaleString('es-CO',{dateStyle:'long',timeStyle:'short'}))}</div>`;
+    const body=document.getElementById('dash-body');body.prepend(head);
+    render();await cuadro();await esperar(350);await cuadro();
+    const bloques=[...body.children].filter(el=>!el.hidden&&el.offsetHeight>0);
+    const {jsPDF}=window.jspdf;const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
+    const PW=210,PH=297,M=10,W=PW-2*M,GAP=4,FOOT=8;let y=M;
+    const fondo=getComputedStyle(document.body).backgroundColor||'#f5f6f9';
+    const pintarFondo=()=>{pdf.setFillColor(245,246,249);pdf.rect(0,0,PW,PH,'F')};
+    pintarFondo();
+    for(const el of bloques){
+      const c=await html2canvas(el,{scale:2,backgroundColor:fondo,logging:false,useCORS:true});
+      const mmPorPx=W/c.width;let restante=c.height,origen=0;
+      // puntos de corte seguros: final de cada fila de tabla y de cada bloque interno (en px del lienzo)
+      const top0=el.getBoundingClientRect().top,k=c.height/el.offsetHeight;
+      const cortes=[...el.querySelectorAll('tr, .chart-box, .legend, .panel-head, .tbl-wrap')].map(x=>Math.round((x.getBoundingClientRect().bottom-top0)*k)).filter(v=>v>0&&v<c.height).sort((a,b)=>a-b);
+      const pagina=PH-2*M-FOOT;
+      if(c.height*mmPorPx>pagina&&((PH-M-FOOT)-y)<pagina*0.45&&y>M){pdf.addPage();pintarFondo();y=M}
+      while(restante>0){
+        const disponible=(PH-M-FOOT)-y;
+        const altoMm=restante*mmPorPx;
+        if(altoMm>disponible&&origen===0&&altoMm<=(PH-2*M-FOOT)){pdf.addPage();pintarFondo();y=M;continue}
+        let pxTramo=Math.min(restante,Math.floor(((PH-M-FOOT)-y)/mmPorPx));
+        if(pxTramo<restante){const lim=origen+pxTramo;const bp=cortes.filter(v=>v>origen+120&&v<=lim).pop();if(bp)pxTramo=bp-origen}
+        if(pxTramo<40){pdf.addPage();pintarFondo();y=M;continue}
+        const t=document.createElement('canvas');t.width=c.width;t.height=pxTramo;
+        t.getContext('2d').drawImage(c,0,origen,c.width,pxTramo,0,0,c.width,pxTramo);
+        pdf.addImage(t.toDataURL('image/jpeg',0.92),'JPEG',M,y,W,pxTramo*mmPorPx);
+        y+=pxTramo*mmPorPx+GAP;origen+=pxTramo;restante-=pxTramo;
+        if(restante>0){pdf.addPage();pintarFondo();y=M}
+      }
+    }
+    const n=pdf.getNumberOfPages();
+    for(let i=1;i<=n;i++){pdf.setPage(i);pdf.setFontSize(8);pdf.setTextColor(111,120,139);
+      pdf.text('Seguimiento Mesa de Soporte · '+fLarga(S.desde)+' a '+fLarga(S.hasta),M,PH-5);pdf.text(`Página ${i} de ${n}`,PW-M,PH-5,{align:'right'})}
+    const quien=S.colab==='todas'?'equipo':(ps.find(p=>p.id===S.colab)?.nombre||'').split(' ')[0].toLowerCase();
+    await guardarArchivo(`Informe_soporte_${quien}_${S.desde}_a_${S.hasta}.pdf`,pdf.output('arraybuffer'),'application/pdf','PDF descargado');
+  }catch(e){toast(e&&e.code==='declined'?'Descarga cancelada.':'No se pudo generar el PDF.');console.error(e)}
+  finally{
+    if(head)head.remove();document.body.classList.remove('pdf-mode');Chart.defaults.animation=animPrev;
+    if(temaPrevio==null)root.removeAttribute('data-theme');else root.setAttribute('data-theme',temaPrevio);
+    render();btn.disabled=false;btn.textContent=txt;
+  }
+}
+document.getElementById('btn-pdf').addEventListener('click',descargarPDF);
+
+
+/* ================= Sábados laborados ================= */
+const horasSab=()=>{const h=+S.cfg.horasSabado;return isFinite(h)&&h>0?h:4};
+const metaSab=()=>horasSab()*factorReporte();
+const sabDocId=(code,anio)=>docIdFor(code,String(anio));
+function sabLista(){
+  const map=codeMap();const out=[];
+  for(const [id,d] of Object.entries(S.sab||{})){const code=String(d.codigo||'').toUpperCase();for(const f of d.fechas||[])out.push({id,code,pid:map[code]||('code:'+code),fecha:f})}
+  return out.sort((a,b)=>a.fecha<b.fecha?-1:a.fecha>b.fecha?1:a.code.localeCompare(b.code));
+}
+function horasDia(pid,fecha){let m=0;for(const x of S.acts)if(x.pid===pid&&x.fecha===fecha)m+=x.min;return m/60}
+function parseSabFecha(v){
+  if(v==null||v==='')return null;
+  if(typeof v==='number')return serialToISO(v);
+  if(v instanceof Date)return `${v.getFullYear()}-${pad(v.getMonth()+1)}-${pad(v.getDate())}`;
+  const s=String(v).trim();let m=s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);if(m)return `${m[1]}-${pad(m[2])}-${pad(m[3])}`;
+  m=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/);if(m)return `${m[3]}-${pad(m[2])}-${pad(m[1])}`;return null;
+}
+const isoValida=s=>{if(!s)return false;const d=P(s);return !isNaN(d)&&iso(d)===s};
+let sabPend=null;
+function leerSabados(buf,nombre){
+  const csv=/\.(csv|txt)$/i.test(nombre||'');
+  const wb=csv?XLSX.read(new TextDecoder('utf-8').decode(buf).replace(/^﻿/,''),{type:'string',raw:true}):XLSX.read(buf,{type:'array',cellDates:false});
+  const ok=[],errores=[];
+  for(const sn of wb.SheetNames){
+    const aoa=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,raw:true,defval:null});
+    let hi=-1,cc=0,cf=1;
+    for(let i=0;i<Math.min(aoa.length,10);i++){const r=(aoa[i]||[]).map(norm);const a=r.findIndex(c=>c.includes('codigo')||c.includes('consultor')||c==='usuario');const b=r.findIndex(c=>c.includes('sabado')||c.includes('fecha'));if(a>=0&&b>=0){hi=i;cc=a;cf=b;break}}
+    if(hi<0)continue;
+    for(let i=hi+1;i<aoa.length;i++){const r=aoa[i]||[];const code=String(r[cc]??'').trim().toUpperCase();const raw=r[cf];
+      if(!code&&(raw==null||raw===''))continue;
+      const f=parseSabFecha(raw);const fila=i+1;
+      if(!code){errores.push({fila,hoja:sn,txt:'Falta el código del consultor'});continue}
+      if(!isoValida(f)){errores.push({fila,hoja:sn,txt:`Fecha no válida: “${raw??''}”`});continue}
+      if(dow(f)!==6){errores.push({fila,hoja:sn,txt:`${fLarga(f)} no es sábado (es ${DIAS[dow(f)]})`});continue}
+      ok.push({code,fecha:f});
+    }
+    break;
+  }
+  const vistos=new Set();const unicos=ok.filter(x=>{const k=x.code+'|'+x.fecha;if(vistos.has(k))return false;vistos.add(k);return true});
+  return {filas:unicos,errores,sinHoja:!ok.length&&!errores.length};
+}
+async function guardarSabados(filas){
+  const grupos={};for(const x of filas){const k=sabDocId(x.code,x.fecha.slice(0,4));(grupos[k]??={codigo:x.code,anio:+x.fecha.slice(0,4),fechas:new Set((S.sab[k]?.fechas)||[])}).fechas.add(x.fecha)}
+  let nuevos=0;
+  for(const [k,g] of Object.entries(grupos)){const antes=(S.sab[k]?.fechas||[]).length;const fechas=[...g.fechas].sort();nuevos+=fechas.length-antes;
+    await db.doc('sabados/'+k).set({codigo:g.codigo,anio:g.anio,fechas,actualizado:new Date().toISOString()})}
+  return nuevos;
+}
+async function quitarSabado(id,fecha){
+  const d=S.sab[id];if(!d)return;const fechas=(d.fechas||[]).filter(f=>f!==fecha);
+  if(fechas.length)await db.doc('sabados/'+id).set({codigo:d.codigo,anio:d.anio,fechas,actualizado:new Date().toISOString()});
+  else await db.doc('sabados/'+id).delete();
+}
+async function descargarPlantillaSab(){
+  const codes=S.colabs.flatMap(c=>codesOf(c)).slice(0,4);
+  const ws=XLSX.utils.aoa_to_sheet([['Codigo consultor','Sabado laborado']]);ws['!cols']=[{wch:20},{wch:18}];
+  const inst=XLSX.utils.aoa_to_sheet([
+    ['Plantilla de sábados laborados'],[],
+    ['1. Escribe los datos en la hoja “Sabados”, desde la fila 2. Una fila por cada sábado trabajado por cada consultora.'],
+    ['2. Codigo consultor: el usuario del CRM, por ejemplo CNS.15.'],
+    ['3. Sabado laborado: la fecha en formato AAAA-MM-DD (año-mes-día), por ejemplo 2026-10-24. Debe caer en sábado.'],
+    ['4. Guarda el archivo e impórtalo en la pestaña Sábados → Importar Excel.'],[],
+    ['Ejemplo (no se importa desde esta hoja):'],['Codigo consultor','Sabado laborado'],
+    ...(codes.length?codes:['CNS.15']).map((c,i)=>[c,add('2026-10-03',7*i)])],{});
+  inst['!cols']=[{wch:22},{wch:18}];
+  // la columna de fecha como texto, para que Excel no cambie el formato
+  for(let r=1;r<=300;r++){const ref=XLSX.utils.encode_cell({r,c:1});ws[ref]={t:'s',v:'',z:'@'};}
+  ws['!ref']='A1:B301';
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Sabados');XLSX.utils.book_append_sheet(wb,inst,'Instrucciones');
+  try{await guardarArchivo('Plantilla_sabados_laborados.xlsx',XLSX.write(wb,{bookType:'xlsx',type:'array'}),null,'Plantilla descargada')}
+  catch(e){toast(e&&e.code==='declined'?'Descarga cancelada.':'No se pudo descargar la plantilla.')}
+}
+function pintarPreviewSab(){
+  const pv=document.getElementById('sb-preview');if(!sabPend){pv.hidden=true;return}
+  const {filas,errores,nombre}=sabPend;const map=codeMap();const ps=Object.fromEntries(personas().map(p=>[p.id,p]));
+  const porCode={};for(const x of filas)(porCode[x.code]??=[]).push(x.fecha);
+  const yaEstan=filas.filter(x=>(S.sab[sabDocId(x.code,x.fecha.slice(0,4))]?.fechas||[]).includes(x.fecha)).length;
+  pv.hidden=false;
+  pv.innerHTML=`<h3 style="font-size:15px;margin-bottom:8px">${esc(nombre)}</h3>
+    ${filas.length?`<div class="tbl-wrap"><table><thead><tr><th>Código</th><th>Colaboradora</th><th class="r">Sábados</th><th>Fechas</th></tr></thead><tbody>${Object.entries(porCode).map(([c,fs])=>`<tr><td class="num"><b>${esc(c)}</b></td><td>${map[c]?esc(ps[map[c]]?.nombre||''):'<span class="chip warn">Sin asignar</span>'}</td><td class="r">${fs.length}</td><td class="small">${fs.sort().map(f=>fCorta(f)).join(', ')}</td></tr>`).join('')}</tbody></table></div>`:''}
+    ${errores.length?`<div class="banner warn" style="margin-top:10px;flex-direction:column;align-items:flex-start;gap:4px"><b>${errores.length} ${errores.length===1?'fila no se importará':'filas no se importarán'}:</b>${errores.slice(0,12).map(e=>`<span class="small">Fila ${e.fila}: ${esc(e.txt)}</span>`).join('')}${errores.length>12?`<span class="small">… y ${errores.length-12} más</span>`:''}</div>`:''}
+    <div class="form-actions">${filas.length?`<button class="btn primary" type="button" id="sb-apply" data-write ${canWrite?'':'disabled'}>Importar ${filas.length} ${filas.length===1?'sábado':'sábados'}</button>`:''}<button class="btn" type="button" id="sb-cancel">Descartar</button>
+    <span class="small muted">${yaEstan?`${yaEstan} ya estaban registrados y no se duplicarán.`:''}</span></div>`;
+}
+function renderSab(){
+  const a=S.desde,b=S.hasta;
+  const sd=document.getElementById('sb-desde'),sh=document.getElementById('sb-hasta');if(document.activeElement!==sd)sd.value=a;if(document.activeElement!==sh)sh.value=b;
+  const ps=personas();const real=ps.filter(p=>p.real);const pById=Object.fromEntries(ps.map(p=>[p.id,p]));
+  const sc=document.getElementById('sb-colab');const o='<option value="todas">Todas</option>'+ps.map(p=>`<option value="${esc(p.id)}">${esc(p.nombre)}</option>`).join('');
+  if(sc.dataset.sig!==o){sc.innerHTML=o;sc.dataset.sig=o}sc.value=[...sc.options].some(x=>x.value===S.colab)?S.colab:'todas';
+  const mc=document.getElementById('sb-m-code');const om=S.colabs.flatMap(c=>codesOf(c).map(k=>`<option value="${esc(k)}">${esc(k)} · ${esc(c.nombre)}</option>`)).join('');
+  if(mc.dataset.sig!==om){mc.innerHTML=om;mc.dataset.sig=om}
+  document.getElementById('sb-file-lbl').hidden=!canWrite;
+  const meta=metaSab();
+  const lista=sabLista().filter(x=>x.fecha>=a&&x.fecha<=b&&(S.colab==='todas'||x.pid===S.colab));
+  document.getElementById('sb-empty').hidden=!!lista.length;document.getElementById('sb-body').hidden=!lista.length;
+  if(charts.sab){charts.sab.destroy();delete charts.sab}
+  pintarPreviewSab();
+  if(!lista.length)return;
+  const filas=lista.map(x=>{const h=horasDia(x.pid,x.fecha);const fut=x.fecha>hoy;const pct=fut?null:h/meta*100;return {...x,h,fut,pct,dif:h-meta}});
+  const pas=filas.filter(f=>!f.fut);const totH=pas.reduce((s,f)=>s+f.h,0),totM=pas.length*meta;const gp=totM?totH/totM*100:null;const ge=estado(gp);
+  const cumplidos=pas.filter(f=>f.pct>=S.cfg.umbralOk).length;
+  document.getElementById('sb-kpis').innerHTML=[
+    ['Sábados laborados',fmtN(filas.length),pas.length<filas.length?`${filas.length-pas.length} aún por venir`:'En el rango elegido'],
+    ['Horas reportadas',fmtH(totH),`Meta ${fmtH(totM)} (${fmtH(meta)} por sábado)`],
+    ['Cumplimiento',gp==null?'—':fmtN(gp,0)+'%',`<span class="chip ${ge.k}">${ge.t}</span>`],
+    ['Sábados cumplidos',`${cumplidos} de ${pas.length}`,'Alcanzaron la meta del día'],
+    ['Promedio por sábado',pas.length?fmtH(totH/pas.length):'—','Horas reportadas']
+  ].map(([l,v,s])=>`<div class="kpi"><span class="k-l">${l}</span><span class="k-v">${v}</span><span class="k-s">${s}</span></div>`).join('');
+  // resumen
+  const grupos={};for(const f of filas)(grupos[f.pid]??=[]).push(f);
+  const orden=ps.filter(p=>grupos[p.id]);
+  document.getElementById('tbl-sab-res').innerHTML='<thead><tr><th>Colaboradora</th><th class="r">Sábados laborados</th><th class="r">Meta (h)</th><th class="r">Reportadas</th><th class="r">Diferencia</th><th>Cumplimiento</th><th>Estado</th></tr></thead><tbody>'+
+    orden.map(p=>{const g=grupos[p.id].filter(f=>!f.fut);const h=g.reduce((s,f)=>s+f.h,0),m=g.length*meta,pct=m?h/m*100:null,e=estado(pct),w=pct==null?0:Math.min(100,pct/1.2);
+      return `<tr><td><span class="who"><span class="dot" style="--c:${colorOf(p)}"></span>${esc(p.nombre)}</span></td><td class="r">${grupos[p.id].length}</td><td class="r">${fmtH(m)}</td><td class="r"><b>${fmtH(h)}</b></td>
+      <td class="r" style="color:var(--${h-m<0?'bad':'ok'})">${h-m>=0?'+':''}${fmtH(h-m)}</td><td><div class="pctcell"><div class="meter ${e.k}" style="flex:1"><i style="width:${w}%"></i><b style="left:${100/1.2}%"></b></div><span class="num">${pct==null?'—':fmtN(pct,0)+'%'}</span></div></td><td><span class="chip ${e.k}">${e.t}</span></td></tr>`}).join('')+'</tbody>';
+  // detalle
+  document.getElementById('tbl-sab-det').innerHTML='<thead><tr><th>Sábado</th><th>Colaboradora</th><th class="r">Reportadas</th><th class="r">Meta</th><th class="r">Diferencia</th><th class="r">Cumplimiento</th><th>Estado</th><th></th></tr></thead><tbody>'+
+    filas.slice().reverse().map(f=>{const p=pById[f.pid]||{nombre:f.code};const e=f.fut?{k:'na',t:'Pendiente'}:estado(f.pct);const key=`sabdel-${f.id}-${f.fecha}`.replace(/[^A-Za-z0-9-]/g,'');
+      return `<tr><td class="num" style="white-space:nowrap">${DIAS[dow(f.fecha)]} ${fLarga(f.fecha)}</td><td><span class="who"><span class="dot" style="--c:${colorOf(p)}"></span>${esc(p.nombre)}</span></td>
+      <td class="r"><b>${fmtH(f.h)}</b></td><td class="r">${fmtH(meta)}</td><td class="r" style="color:var(--${f.fut?'fg-3':f.dif<0?'bad':'ok'})">${f.fut?'—':(f.dif>=0?'+':'')+fmtH(f.dif)}</td>
+      <td class="r">${f.pct==null?'—':fmtN(f.pct,0)+'%'}</td><td><span class="chip ${e.k}">${e.t}</span></td>
+      <td class="r">${canWrite?`<button class="btn sm danger" type="button" id="${key}" data-sab-del="${esc(f.id)}|${f.fecha}">${txtBorrar(key)}</button>`:''}</td></tr>`}).join('')+'</tbody>';
+  // sábados con reporte no registrados
+  const reg=new Set(sabLista().map(x=>x.pid+'|'+x.fecha));const extra={};
+  for(const x of S.acts){if(x.fecha<a||x.fecha>b||dow(x.fecha)!==6)continue;if(S.colab!=='todas'&&x.pid!==S.colab)continue;const k=x.pid+'|'+x.fecha;if(reg.has(k))continue;(extra[k]??={pid:x.pid,code:x.code,fecha:x.fecha,min:0}).min+=x.min}
+  const ex=Object.values(extra).sort((p,q)=>p.fecha<q.fecha?1:-1);
+  document.getElementById('sb-extra-panel').hidden=!ex.length;
+  document.getElementById('tbl-sab-extra').innerHTML=ex.length?'<thead><tr><th>Sábado</th><th>Colaboradora</th><th class="r">Horas reportadas</th><th></th></tr></thead><tbody>'+ex.map(x=>{const p=pById[x.pid]||{nombre:x.code};
+    return `<tr><td class="num">${fLarga(x.fecha)}</td><td><span class="who"><span class="dot" style="--c:${colorOf(p)}"></span>${esc(p.nombre)}</span></td><td class="r">${fmtH(x.min/60)}</td><td class="r">${canWrite?`<button class="btn sm" type="button" data-sab-add="${esc(x.code)}|${x.fecha}">Marcar como laborado</button>`:''}</td></tr>`}).join('')+'</tbody>':'';
+  // gráfica
+  const fechas=[...new Set(filas.map(f=>f.fecha))].sort();const quien=orden;
+  const fg3=cssVar('--fg-3'),grid=cssVar('--line'),surf=cssVar('--surface');
+  const tip={backgroundColor:cssVar('--fg'),titleColor:surf,bodyColor:surf,padding:10,cornerRadius:6,boxPadding:4};
+  document.getElementById('sb-chart-sub').textContent=`Meta de ${fmtH(meta)} por sábado (línea punteada). Cada barra es una colaboradora que trabajó ese sábado.`;
+  document.getElementById('lg-sab').innerHTML=quien.map(p=>`<span><i class="sw" style="--c:${colorOf(p)}"></i>${esc(p.nombre)}</span>`).join('')+'<span><i class="ln"></i>Meta del sábado</span>';
+  const ds=quien.map(p=>({type:'bar',label:p.nombre,data:fechas.map(d=>{const f=filas.find(x=>x.pid===p.id&&x.fecha===d);return f?+f.h.toFixed(2):null}),backgroundColor:colorOf(p),borderRadius:4,borderSkipped:'start',maxBarThickness:36,skipNull:true}));
+  ds.push({type:'line',label:'Meta',data:fechas.map(()=>meta),borderColor:fg3,borderDash:[5,4],borderWidth:1.5,pointRadius:0,pointHoverRadius:0});
+  charts.sab=new Chart(document.getElementById('ch-sab'),{data:{labels:fechas.map(d=>`sáb ${fCorta(d)}`),datasets:ds},
+    options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tip,filter:i=>i.dataset.label!=='Meta'&&i.raw!=null,callbacks:{label:c=>`${c.dataset.label}: ${fmtH(c.raw)} de ${fmtH(meta)}`}}},
+      scales:{x:{grid:{display:false}},y:{beginAtZero:true,suggestedMax:Math.max(5,meta+1),grid:{color:grid},border:{display:false},title:{display:true,text:'Horas',color:fg3}}}}});
+}
+document.getElementById('sb-desde').addEventListener('change',e=>{if(e.target.value){S.desde=e.target.value;if(S.hasta<S.desde)S.hasta=S.desde;S.preset='';render()}});
+document.getElementById('sb-hasta').addEventListener('change',e=>{if(e.target.value){S.hasta=e.target.value;if(S.hasta<S.desde)S.desde=S.hasta;S.preset='';render()}});
+document.getElementById('sb-colab').addEventListener('change',e=>{S.colab=e.target.value;render()});
+document.getElementById('sb-plantilla').addEventListener('click',descargarPlantillaSab);
+document.getElementById('sb-file').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  const st=document.getElementById('sb-status');st.className='status';st.textContent='';
+  try{const r=leerSabados(await f.arrayBuffer(),f.name);
+    if(r.sinHoja){sabPend=null;pintarPreviewSab();st.className='status bad';st.textContent='No encontré las columnas “Codigo consultor” y “Sabado laborado”. Usa la plantilla.';return}
+    sabPend={...r,nombre:f.name};pintarPreviewSab()}
+  catch(err){sabPend=null;pintarPreviewSab();st.className='status bad';st.textContent='No se pudo leer el archivo: debe ser un Excel (.xlsx) o CSV.'}});
+document.getElementById('view-sab').addEventListener('click',async e=>{
+  const st=document.getElementById('sb-status');
+  if(e.target.id==='sb-cancel'){sabPend=null;pintarPreviewSab();return}
+  if(e.target.id==='sb-apply'&&sabPend){e.target.disabled=true;st.className='status';st.textContent='Guardando…';
+    try{const n=await guardarSabados(sabPend.filas);sabPend=null;st.className='status ok';st.textContent=`Listo: ${n} ${n===1?'sábado nuevo':'sábados nuevos'} registrados.`;toast('Sábados importados');render()}
+    catch(err){st.className='status bad';st.textContent=errMsg(err);e.target.disabled=false}return}
+  const del=e.target.closest('[data-sab-del]');if(del){const [id,fecha]=del.dataset.sabDel.split('|');await twoStep(del,()=>quitarSabado(id,fecha),'Sábado quitado');return}
+  const ad=e.target.closest('[data-sab-add]');if(ad){const [code,fecha]=ad.dataset.sabAdd.split('|');ad.disabled=true;try{await guardarSabados([{code,fecha}]);toast('Sábado registrado')}catch(err){toast(errMsg(err));ad.disabled=false}return}
+});
+document.getElementById('sb-form').addEventListener('submit',async e=>{e.preventDefault();
+  const st=document.getElementById('sb-status');st.className='status';const code=document.getElementById('sb-m-code').value;const f=document.getElementById('sb-m-fecha').value;
+  if(!code){st.className='status bad';st.textContent='Primero registra las colaboradoras en Configuración.';return}
+  if(!f){st.className='status bad';st.textContent='Elige la fecha del sábado.';return}
+  if(dow(f)!==6){st.className='status bad';st.textContent=`${fLarga(f)} no es sábado.`;return}
+  if((S.sab[sabDocId(code,f.slice(0,4))]?.fechas||[]).includes(f)){st.className='status bad';st.textContent='Ese sábado ya está registrado para esa consultora.';return}
+  try{await guardarSabados([{code,fecha:f}]);st.className='status ok';st.textContent=`Registrado: ${code}, ${fLarga(f)}.`;toast('Sábado registrado')}catch(err){st.className='status bad';st.textContent=errMsg(err)}
+});
+
+
+
+function excluidosPorTicket(acts){
+  const tk=new Map();
+  for(const x of acts){if(!excluidaAct(x))continue;let r=tk.get(x.ticket);
+    if(!r){r={ticket:x.ticket,cliente:x.cliente,lineas:new Set(),motivos:new Set(),ps:new Set(),d1:x.fecha,d2:x.fecha,n:0,min:0,big:x};tk.set(x.ticket,r)}
+    r.lineas.add(x.linea||'—');if(excluidaProm(x.linea))r.motivos.add('Proyecto');if(clienteExcluido(x.cliente))r.motivos.add('Cliente interno');
+    r.ps.add(x.pid);r.n++;r.min+=x.min;if(x.fecha<r.d1)r.d1=x.fecha;if(x.fecha>r.d2)r.d2=x.fecha;if(x.min>r.big.min)r.big=x}
+  return [...tk.values()].sort((p,q)=>q.min-p.min);
+}
+function renderExcluidos(acts,pById){
+  const lst=excluidosPorTicket(acts);const pn=document.getElementById('excl-panel');pn.hidden=!lst.length;if(!lst.length)return;
+  const h=lst.reduce((s,r)=>s+r.min,0)/60;
+  document.getElementById('excl-sub').textContent=`${lst.length} ${lst.length===1?'requerimiento':'requerimientos'} · ${fmtH(h)} en el rango. Sus horas cuentan para el cumplimiento, pero no para el promedio. Las reglas se cambian en Configuración.`;
+  document.getElementById('tbl-excl').innerHTML='<thead><tr><th>Ticket</th><th>Cliente y actividad principal</th><th>Línea</th><th>Motivo</th><th>Fechas</th><th class="r">Act.</th><th class="r">Horas</th></tr></thead><tbody>'+
+    lst.map(r=>`<tr><td class="num"><b>${esc(r.ticket)}</b></td>
+      <td class="wrapcell"><div><b>${esc(r.cliente)}</b></div><div class="small muted">${esc(r.big.actividad)}</div><div class="small" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:2px">${[...r.ps].map(id=>`<span class="who"><span class="dot" style="--c:${colorOf(pById[id]||{})}"></span>${esc(pById[id]?.nombre||id)}</span>`).join('')}</div></td>
+      <td class="small">${[...r.lineas].map(esc).join(', ')}</td><td>${[...r.motivos].map(m=>`<span class="chip na">${m}</span>`).join(' ')}</td>
+      <td class="num small" style="white-space:nowrap">${r.d1===r.d2?fCorta(r.d1):fCorta(r.d1)+' – '+fCorta(r.d2)}</td><td class="r">${r.n}</td><td class="r"><b>${fmtH(r.min/60)}</b></td></tr>`).join('')+'</tbody>';
+}
+
+/* ---- Líneas excluidas del promedio por requerimiento ---- */
+const esProyectoDef=l=>{const n=norm(l);return n.includes('proyecto')||/^pry/.test(n)};
+function excluidaProm(l){return Array.isArray(S.cfg.lineasExcluidas)?S.cfg.lineasExcluidas.includes(l):esProyectoDef(l)}
+const esInternoDef=c=>norm(c).replace(/\s+/g,'').includes('qualitycolombia');
+function clienteExcluido(c){return Array.isArray(S.cfg.clientesExcluidos)?S.cfg.clientesExcluidos.includes(c):esInternoDef(c)}
+const excluidaAct=x=>excluidaProm(x.linea)||clienteExcluido(x.cliente);
+function promReq(acts){const t=new Set();let m=0;for(const x of acts){if(excluidaAct(x))continue;t.add(x.ticket);m+=x.min}return {req:t.size,horas:m/60,prom:t.size?m/60/t.size:null}}
+let linDraft=null,cliDraft=null,exclDirty=false;
+function renderLineas(){
+  const box=document.getElementById('lin-list');if(!box||box.contains(document.activeElement))return;
+  const cnt={};for(const x of S.acts){const l=x.linea||'(sin línea)';(cnt[l]??={a:0,t:new Set(),m:0}).a++;cnt[l].t.add(x.ticket);cnt[l].m+=x.min}
+  // mientras no haya cambios sin guardar, las casillas reflejan siempre lo que está vigente
+  if(!exclDirty||!linDraft)linDraft=new Set(Object.keys(cnt).filter(excluidaProm));
+  const clientes=[...new Set(S.acts.map(x=>x.cliente))].sort((p,q)=>p.localeCompare(q,'es'));
+  if(!exclDirty||!cliDraft)cliDraft=new Set(Array.isArray(S.cfg.clientesExcluidos)?S.cfg.clientesExcluidos:clientes.filter(esInternoDef));
+  const cl=document.getElementById('cliex-list');
+  cl.innerHTML=cliDraft.size?[...cliDraft].map(c=>`<span class="chip na" style="font-size:12.5px;padding:4px 6px 4px 10px">${esc(c)} <button type="button" class="linkbtn" data-cliex-rm="${esc(c)}" aria-label="Quitar ${esc(c)}" style="color:var(--bad);font-size:15px;margin-left:4px" data-write>×</button></span>`).join(''):'<span class="small muted">Ningún cliente excluido.</span>';
+  const dl=document.getElementById('cliex-dl');const sig=clientes.length+'|'+clientes[0];if(dl.dataset.sig!==sig){dl.innerHTML=clientes.map(c=>`<option value="${esc(c)}"></option>`).join('');dl.dataset.sig=sig}
+  const ls=Object.entries(cnt).sort((p,q)=>q[1].m-p[1].m);
+  box.innerHTML=ls.length?ls.map(([l,c])=>`<div><label style="display:flex;gap:8px;align-items:center;font-size:13.5px;text-transform:none;letter-spacing:0;font-weight:500;color:var(--fg)"><input type="checkbox" data-lin="${esc(l)}" ${linDraft.has(l)?'checked':''}> ${esc(l)}</label><span class="small muted num">${c.t.size} req. · ${fmtH(c.m/60)}</span></div>`).join(''):'<p class="muted">Aún no hay actividades cargadas.</p>';
+}
+document.getElementById('lin-list').addEventListener('change',e=>{const l=e.target.dataset.lin;if(l==null)return;exclDirty=true;if(e.target.checked)linDraft.add(l);else linDraft.delete(l)});
+document.getElementById('cliex-list').addEventListener('click',e=>{const b=e.target.closest('[data-cliex-rm]');if(!b)return;exclDirty=true;cliDraft.delete(b.dataset.cliexRm);renderLineas()});
+document.getElementById('cliex-add').addEventListener('click',()=>{const st=document.getElementById('lin-status');const v=document.getElementById('cliex-in').value.trim();
+  const c=[...new Set(S.acts.map(x=>x.cliente))].find(x=>norm(x)===norm(v));
+  if(!c){st.className='status bad';st.textContent='Elige un cliente de la lista (debe tener actividades cargadas).';return}
+  exclDirty=true;cliDraft.add(c);document.getElementById('cliex-in').value='';st.className='status';st.textContent='Agregado. Recuerda guardar las exclusiones.';renderLineas()});
+document.getElementById('lin-save').addEventListener('click',async()=>{
+  const st=document.getElementById('lin-status');st.className='status';
+  if(!S.ready.act||!S.acts.length){st.className='status bad';st.textContent='Espera a que carguen las actividades para guardar las exclusiones.';return}
+  try{st.textContent='Guardando…';await db.doc('config/general').set({...S.cfg,lineasExcluidas:[...linDraft],clientesExcluidos:[...cliDraft]});linDraft=null;cliDraft=null;exclDirty=false;st.className='status ok';st.textContent='Exclusiones guardadas.';toast('Promedio actualizado')}
+  catch(err){st.className='status bad';st.textContent=errMsg(err)}
+});
+
+/* ================= Informe descargable (Excel) ================= */
+function datosInforme(){
+  const a=S.desde,b=S.hasta;const ps=personas();
+  const sel=S.colab==='todas'?ps:ps.filter(p=>p.id===S.colab);const ids=new Set(sel.map(p=>p.id));
+  const acts=S.acts.filter(x=>x.fecha>=a&&x.fecha<=b&&ids.has(x.pid));
+  const pById=Object.fromEntries(ps.map(p=>[p.id,p]));
+  const r2=n=>Math.round(n*100)/100;
+  const libro=XLSX.utils.book_new();
+  const hoja=(nombre,filas,anchos)=>{const ws=XLSX.utils.aoa_to_sheet(filas);if(anchos)ws['!cols']=anchos.map(w=>({wch:w}));XLSX.utils.book_append_sheet(libro,ws,nombre)};
+  const rows=sel.map(p=>({p,c:calc(p,a,b)}));
+  let tm=0,tr=0;rows.forEach(({c})=>{tm+=c.meta;tr+=c.rep});
+  const tickets=new Set(acts.map(x=>x.ticket));const horas=acts.reduce((s,x)=>s+x.min,0)/60;
+  hoja('Resumen',[
+    ['Informe Mesa de Soporte'],[],
+    ['Rango',`${fLarga(a)} a ${fLarga(b)}`],['Colaboradora',S.colab==='todas'?'Todas':(sel[0]?.nombre||'')],
+    ['Generado',new Date().toLocaleString('es-CO')],[],
+    ['Indicador','Valor'],
+    ['Requerimientos atendidos',tickets.size],['Actividades registradas',acts.length],
+    ['Horas reportadas',r2(horas)],['Meta de reporte del rango (h)',r2(tm)],
+    ['Cumplimiento (%)',tm>0?r2(tr/tm*100):''],['Clientes atendidos',new Set(acts.map(x=>x.cliente)).size],
+    ['Promedio por requerimiento (h)',(()=>{const x=promReq(acts);return x.prom==null?'':r2(x.prom)})()],['Líneas excluidas del promedio',[...new Set(acts.map(x=>x.linea).filter(excluidaProm))].join(', ')||'Ninguna'],['Clientes excluidos del promedio',[...new Set(acts.map(x=>x.cliente).filter(clienteExcluido))].join(', ')||'Ninguno'],[],
+    ['Reglas',`Meta por día hábil ${fmtH(metaDia())} (42 h semanales menos descanso no reportado). Semanas de lunes a sábado. Meta contada hasta ${fLarga(b<hoy?b:hoy)}.`]
+  ],[34,60]);
+  hoja('Cumplimiento',[['Colaboradora','Usuario CRM','Días hábiles','Meta base (h)','Novedades (h)','Meta ajustada (h)','Reportadas (h)','Diferencia (h)','Cumplimiento (%)','Estado'],
+    ...rows.map(({p,c})=>[p.nombre,p.real?codesOf(S.colabs.find(x=>x.id===p.id)||{}).join(', '):p.code,c.habiles,r2(c.base),r2(c.desc),r2(c.meta),r2(c.rep),r2(c.dif),c.pct==null?'':r2(c.pct),estado(c.pct).t])],[32,14,12,13,13,15,14,14,15,12]);
+  const cs=cortes(a,b);
+  hoja('Por semana',[['Colaboradora','Desde','Hasta','Meta (h)','Reportadas (h)','Cumplimiento (%)','Estado'],
+    ...sel.flatMap(p=>cs.map(([x,y])=>{const c=calc(p,x,y);return [p.nombre,x,y,r2(c.meta),r2(c.rep),c.pct==null?'':r2(c.pct),estado(c.pct).t]}))],[32,12,12,10,14,16,12]);
+  const dias=[];for(const d of (function*(){for(let s=a;s<=b;s=add(s,1))yield s})()){const w=dow(d);if((w>=1&&w<=6)||acts.some(x=>x.fecha===d))dias.push(d)}
+  const m={};for(const x of acts){const k=x.pid+'|'+x.fecha;m[k]=(m[k]||0)+x.min/60}
+  hoja('Por día',[['Fecha','Día','Festivo',...sel.map(p=>p.nombre+' (h)')],...dias.map(d=>[d,DIAS[dow(d)],esFestivo(d)?'Sí':'',...sel.map(p=>r2(m[p.id+'|'+d]||0))])],[12,6,8,...sel.map(()=>22)]);
+  const cli=new Map();for(const x of acts){let c=cli.get(x.cliente);if(!c){c={t:new Set(),n:0,min:0,tp:new Set(),mp:0};cli.set(x.cliente,c)}c.t.add(x.ticket);c.n++;c.min+=x.min;if(!excluidaAct(x)){c.tp.add(x.ticket);c.mp+=x.min}}
+  hoja('Clientes',[['Cliente','Requerimientos','Actividades','Horas','Promedio por requerimiento sin exclusiones (h)'],
+    ...[...cli.entries()].sort((p,q)=>q[1].min-p[1].min).map(([k,c])=>[k,c.t.size,c.n,r2(c.min/60),c.tp.size?r2(c.mp/60/c.tp.size):'Excluido del promedio'])],[50,15,12,10,36]);
+  const tk=new Map();for(const x of acts){let r=tk.get(x.ticket);if(!r){r={cliente:x.cliente,min:0,n:0,ps:new Set(),d1:x.fecha,d2:x.fecha,big:x};tk.set(x.ticket,r)}r.min+=x.min;r.n++;r.ps.add(pById[x.pid]?.nombre||x.code);if(x.fecha<r.d1)r.d1=x.fecha;if(x.fecha>r.d2)r.d2=x.fecha;if(x.min>r.big.min)r.big=x}
+  hoja('Excluidos del promedio',[['Ticket','Cliente','Actividad principal','Línea','Motivo','Colaboradoras','Desde','Hasta','Actividades','Horas'],
+    ...excluidosPorTicket(acts).map(r=>[r.ticket,r.cliente,r.big.actividad,[...r.lineas].join(', '),[...r.motivos].join(', '),[...r.ps].map(id=>pById[id]?.nombre||id).join(', '),r.d1,r.d2,r.n,r2(r.min/60)])],[10,45,55,30,22,30,12,12,11,8]);
+  hoja('Requerimientos',[['Ticket','Cliente','Colaboradoras','Desde','Hasta','Actividades','Horas','Actividad principal'],
+    ...[...tk.entries()].sort((p,q)=>q[1].min-p[1].min).map(([k,r])=>[k,r.cliente,[...r.ps].join(', '),r.d1,r.d2,r.n,r2(r.min/60),r.big.actividad])],[10,45,30,12,12,11,8,60]);
+  const fin=b<hoy?b:hoy;
+  const nov=S.novedades.filter(n=>(S.colab==='todas'||n.colab===S.colab||n.colab==='todas')&&(n.unidad==='dias'?!(n.hasta<a||n.desde>b):(n.fecha>=a&&n.fecha<=b)));
+  const sabR=sabLista().filter(x=>x.fecha>=a&&x.fecha<=b&&ids.has(x.pid));
+  hoja('Sábados',[['Colaboradora','Código','Sábado','Horas reportadas','Meta (h)','Diferencia (h)','Cumplimiento (%)','Estado'],
+    ...sabR.map(x=>{const h=horasDia(x.pid,x.fecha),m=metaSab(),fut=x.fecha>hoy,pct=fut?null:h/m*100;return [pById[x.pid]?.nombre||x.code,x.code,x.fecha,r2(h),m,fut?'':r2(h-m),pct==null?'':r2(pct),fut?'Pendiente':estado(pct).t]})],[32,10,12,16,10,14,16,12]);
+  hoja('Novedades',[['Colaboradora','Tipo','Desde / fecha','Hasta','Unidad','Horas descontadas','Observación'],
+    ...nov.map(n=>[n.colab==='todas'?'Todas':(pById[n.colab]?.nombre||n.colab),TIPO[n.tipo]?.nombre||n.tipo,n.unidad==='dias'?n.desde:n.fecha,n.unidad==='dias'?n.hasta:'',n.unidad==='dias'?'Días':'Horas',r2(durNovedad(n)),n.nota||''])],[32,26,14,12,8,18,40]);
+  hoja('Actividades',[['Ticket','Act','Actividad','Usuario CRM','Colaboradora','Línea','Horas','Fecha','Cliente'],
+    ...acts.slice().sort((p,q)=>p.fecha<q.fecha?-1:p.fecha>q.fecha?1:0).map(x=>[x.ticket,x.act,x.actividad,x.code,pById[x.pid]?.nombre||x.code,x.linea,r2(x.min/60),x.fecha,x.cliente])],[10,6,60,12,30,10,8,12,45]);
+  const quien=S.colab==='todas'?'equipo':(sel[0]?.nombre||'').split(' ')[0].toLowerCase();
+  return {libro,nombre:`Informe_soporte_${quien}_${a}_a_${b}.xlsx`,vacio:acts.length===0};
+}
+async function descargarInforme(){
+  const btn=document.getElementById('btn-xlsx');
+  try{
+    const {libro,nombre,vacio}=datosInforme();
+    if(vacio){toast('No hay actividades en el rango elegido.');return}
+    btn.disabled=true;
+    const buf=XLSX.write(libro,{bookType:'xlsx',type:'array'});
+    await guardarArchivo(nombre,buf);
+  }catch(e){toast(e&&e.code==='declined'?'Descarga cancelada.':'No se pudo generar el informe.')}
+  finally{btn.disabled=false}
+}
+
+async function guardarArchivo(nombre,buf,mime,msg){const url=URL.createObjectURL(new Blob([buf],{type:mime||'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));const a=document.createElement('a');a.href=url;a.download=nombre;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);toast(msg||'Informe descargado')}
+/* ================= Eventos ================= */
+document.querySelector('nav.tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b)setTab(b.dataset.tab)});
+document.addEventListener('click',async e=>{
+  const g=e.target.closest('[data-goto]');if(g){setTab(g.dataset.goto);return}
+  const pr=e.target.closest('#presets button');if(pr){setPreset(pr.dataset.p);return}
+  const rb=e.target.closest('#f-resp [data-resp]');if(rb){S.colab=rb.dataset.resp;render();return}
+  const th=e.target.closest('th[data-sort]');if(th){const k=th.dataset.sort;S.cliSort=S.cliSort.k===k?{k,d:-S.cliSort.d}:{k,d:k==='cliente'?1:-1};render();return}
+  if(e.target.id==='cli-toggle'){S.cliAll=!S.cliAll;render();return}
+  const dn=e.target.closest('[data-del-nov]');if(dn){await twoStep(dn,()=>db.collection('novedades').doc(dn.dataset.delNov).delete(),'Novedad eliminada');return}
+  const da=e.target.closest('[data-del-act]');if(da){await twoStep(da,()=>db.doc('actividades/'+da.dataset.delAct).delete(),'Datos del mes eliminados');return}
+  if(e.target.id==='ld-del'){let n=0;await twoStep(e.target,async()=>{n=await eliminarRangoCarga()},'Actividades del rango eliminadas');if(n)toast(`Se eliminaron ${fmtN(n)} actividades del rango`);return}
+  if(e.target.id==='ld-clear'){ldF={desde:'',hasta:'',user:''};renderLoaded();return}
+  if(e.target.id==='pv-save'){savePreview();return}
+  if(e.target.id==='pv-cancel'){preview=null;renderPreview();return}
+  const sw=e.target.closest('[data-sw]');if(sw){colabDraft[+sw.dataset.sw].color=+sw.dataset.k;sw.parentElement.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===sw?'true':'false'));return}
+  const rm=e.target.closest('[data-rm]');if(rm){colabDraft.splice(+rm.dataset.rm,1);document.activeElement?.blur();renderCfg();return}
+});
+let armado={k:null,t:0};
+async function twoStep(btn,fn,msg){
+  const k=btn.dataset.delNov||btn.dataset.delAct||btn.id;const ahora=Date.now();
+  if(armado.k!==k||ahora-armado.t>4000){armado={k,t:ahora};btn.dataset.txt=btn.dataset.txt||btn.textContent;btn.textContent='¿Confirmar?';
+    setTimeout(()=>{if(armado.k===k&&Date.now()-armado.t>=3900){armado={k:null,t:0};if(btn.isConnected&&btn.dataset.txt)btn.textContent=btn.dataset.txt;render()}},4000);return}
+  armado={k:null,t:0};btn.disabled=true;try{await fn();toast(msg)}catch(e){toast(errMsg(e));btn.disabled=false}
+}
+const txtBorrar=k=>armado.k===k&&Date.now()-armado.t<=4000?'¿Confirmar?':'Eliminar';
+document.getElementById('f-desde').addEventListener('change',e=>{if(e.target.value){S.desde=e.target.value;if(S.hasta<S.desde)S.hasta=S.desde;S.preset='';render()}});
+document.getElementById('f-hasta').addEventListener('change',e=>{if(e.target.value){S.hasta=e.target.value;if(S.hasta<S.desde)S.desde=S.hasta;S.preset='';render()}});
+document.getElementById('btn-xlsx').addEventListener('click',descargarInforme);
+document.getElementById('ld-desde').addEventListener('change',e=>{ldF.desde=e.target.value;if(ldF.desde&&ldF.hasta&&ldF.hasta<ldF.desde)ldF.hasta=ldF.desde;armado={k:null,t:0};renderLoaded()});
+document.getElementById('ld-hasta').addEventListener('change',e=>{ldF.hasta=e.target.value;if(ldF.desde&&ldF.hasta&&ldF.hasta<ldF.desde)ldF.desde=ldF.hasta;armado={k:null,t:0};renderLoaded()});
+document.getElementById('ld-user').addEventListener('change',e=>{ldF.user=e.target.value;armado={k:null,t:0};renderLoaded()});
+document.getElementById('f-colab').addEventListener('change',e=>{S.colab=e.target.value;render()});
+document.getElementById('cli-q').addEventListener('input',e=>{S.cliQ=e.target.value;render()});
+document.getElementById('nvf-colab').addEventListener('change',e=>{S.nvf.colab=e.target.value;render()});
+document.getElementById('nvf-tipo').addEventListener('change',e=>{S.nvf.tipo=e.target.value;render()});
+
+// novedades form
+(()=>{const t=document.getElementById('nv-tipo');fillTipoSelects();
+  t.addEventListener('change',()=>{document.getElementById(TIPO[t.value]?.u==='dias'?'nv-u-dias':'nv-u-horas').checked=true;syncNovForm()});
+  document.querySelectorAll('input[name="nv-unidad"]').forEach(r=>r.addEventListener('change',syncNovForm));
+  document.getElementById('nv-desde').value=hoy;document.getElementById('nv-hasta').value=hoy;document.getElementById('nv-fecha').value=hoy;
+  document.getElementById('nv-desde').addEventListener('change',e=>{const h=document.getElementById('nv-hasta');if(h.value<e.target.value)h.value=e.target.value});
+  if(TIPO.permiso)t.value='permiso';syncNovForm();
+})();
+document.getElementById('nov-form').addEventListener('submit',async e=>{
+  e.preventDefault();const st=document.getElementById('nv-status');st.className='status';
+  if(!db){st.className='status bad';st.textContent='La base de datos no está disponible en esta vista.';return}
+  const tipo=document.getElementById('nv-tipo').value;const unidad=document.querySelector('input[name="nv-unidad"]:checked').value;
+  const colab=tipo==='festivo'?'todas':document.getElementById('nv-colab').value;
+  const nota=document.getElementById('nv-nota').value.trim();
+  const doc={colab,tipo,unidad,nota,creado:new Date().toISOString()};
+  if(unidad==='dias'){const d=document.getElementById('nv-desde').value,h=document.getElementById('nv-hasta').value;
+    if(!d||!h){st.className='status bad';st.textContent='Indica la fecha inicial y final.';return}
+    if(h<d){st.className='status bad';st.textContent='La fecha final no puede ser anterior a la inicial.';return}
+    doc.desde=d;doc.hasta=h}
+  else{const f=document.getElementById('nv-fecha').value;const hh=(+document.getElementById('nv-h').value||0)+(+document.getElementById('nv-m').value||0)/60;
+    if(!f){st.className='status bad';st.textContent='Indica la fecha de la novedad.';return}
+    if(hh<=0){st.className='status bad';st.textContent='Indica cuántas horas o minutos duró la novedad.';return}
+    doc.fecha=f;doc.horas=Math.round(hh*10000)/10000}
+  const btn=document.getElementById('nv-save');btn.disabled=true;st.textContent='Guardando…';
+  try{await db.collection('novedades').add(doc);st.className='status ok';st.textContent='Novedad guardada.';toast('Novedad guardada');document.getElementById('nv-nota').value='';document.getElementById('nv-h').value=0;document.getElementById('nv-m').value=0}
+  catch(err){st.className='status bad';st.textContent=errMsg(err)}
+  btn.disabled=!canWrite;
+});
+
+// carga
+(()=>{const drop=document.getElementById('drop');const fi=document.getElementById('file-in');
+  fi.addEventListener('change',()=>{if(fi.files[0])handleFile(fi.files[0]);fi.value=''});
+  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over')}));
+  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over')}));
+  drop.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)handleFile(f)});
+})();
+
+// configuración
+document.getElementById('colab-list').addEventListener('input',e=>{const i=e.target.dataset.cb;if(i==null)return;colabDraft[+i][e.target.dataset.f]=e.target.value});
+document.getElementById('colab-add').addEventListener('click',()=>{const used=new Set(colabDraft.map(c=>c.color));let k=0;while(used.has(k)&&k<5)k++;
+  colabDraft.push({id:'c'+Date.now().toString(36),nombre:'',codigos:'',color:k});document.activeElement?.blur();renderCfg();document.getElementById('cb-n-'+(colabDraft.length-1))?.focus()});
+document.getElementById('colab-save').addEventListener('click',async()=>{
+  const st=document.getElementById('colab-status');st.className='status';
+  const lista=colabDraft.map(c=>({id:c.id,nombre:String(c.nombre||'').trim(),codigos:codesOf(c).join(', '),color:c.color??0}));
+  if(lista.some(c=>!c.nombre)){st.className='status bad';st.textContent='Cada colaboradora necesita un nombre.';return}
+  const seen={};for(const c of lista)for(const k of codesOf(c)){if(seen[k]){st.className='status bad';st.textContent=`El usuario ${k} está asignado a dos personas.`;return}seen[k]=1}
+  try{st.textContent='Guardando…';await db.doc('config/colaboradoras').set({lista});st.className='status ok';st.textContent='Colaboradoras guardadas.';colabDraft=null;toast('Colaboradoras guardadas')}
+  catch(e){st.className='status bad';st.textContent=errMsg(e)}
+});
+document.getElementById('cfg-form').addEventListener('submit',async e=>{
+  e.preventDefault();const st=document.getElementById('cfg-status');st.className='status';
+  const v=id=>parseFloat(document.getElementById(id).value);
+  const c={horasSabado:v('c-hsab'),horasSemana:v('c-hs'),horasDia:v('c-hd'),descansoMin:v('c-dm'),descansoCadaH:v('c-dc'),descuentaDescanso:document.getElementById('c-desc').checked,
+    periodo:document.getElementById('c-per').value,umbralOk:v('c-ok'),umbralAlerta:v('c-al')};
+  if(Object.values(c).some(x=>typeof x==='number'&&!isFinite(x))){st.className='status bad';st.textContent='Completa todos los campos con números.';return}
+  if(c.umbralAlerta>c.umbralOk){st.className='status bad';st.textContent='El umbral de alerta debe ser menor o igual al de cumplimiento.';return}
+  try{st.textContent='Guardando…';await db.doc('config/general').set({...S.cfg,...c});st.className='status ok';st.textContent='Reglas guardadas.';toast('Reglas guardadas')}
+  catch(err){st.className='status bad';st.textContent=errMsg(err)}
+});
+const MESES_L=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function leerFestivos(txt,anio){
+  const out=new Map();const p2=n=>String(n).padStart(2,'0');
+  const valida=s=>{const d=new Date(s+'T00:00:00Z');return !isNaN(d)&&d.toISOString().slice(0,10)===s};
+  for(const linea of String(txt).split(/\r?\n/)){
+    const l=linea.replace(/\s+/g,' ').trim();if(!l)continue;const low=l.toLowerCase();let f=null,a=0,b=0;
+    let m=l.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if(m){f=[+m[1],+m[2],+m[3]];a=m.index;b=m.index+m[0].length}
+    else if((m=l.match(/(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})/))){f=[+m[3],+m[2],+m[1]];a=m.index;b=m.index+m[0].length}
+    else if((m=low.match(/(\d{1,2})\s*(?:de\s+)?(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)(?:\s+(?:de|del)\s+(\d{4})|\s+(\d{4}))?/))){
+      const mes=m[2]==='setiembre'?9:MESES_L.indexOf(m[2])+1;f=[+(m[3]||m[4]||anio),mes,+m[1]];a=m.index;b=m.index+m[0].length}
+    else if((m=low.match(/(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)\s+(\d{1,2})(?:,?\s+(\d{4}))?/))){
+      const mes=m[1]==='setiembre'?9:MESES_L.indexOf(m[1])+1;f=[+(m[3]||anio),mes,+m[2]];a=m.index;b=m.index+m[0].length}
+    if(!f||f[0]!==anio)continue;
+    const iso=`${f[0]}-${p2(f[1])}-${p2(f[2])}`;if(!valida(iso))continue;
+    const antes=l.slice(0,a).replace(/(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|domingo)[\s,]*$/i,'');
+    let nombre=(antes+' '+l.slice(b))
+      .replace(/[|\t;•·–—]+/g,' ').replace(/^[\s,:\-.]+|[\s,:\-.]+$/g,'').replace(/^(de|del)\s+/i,'').replace(/\s+/g,' ').trim();
+    if(!nombre||/^\d+$/.test(nombre))nombre='Festivo';
+    if(!out.has(iso))out.set(iso,nombre);
+  }
+  return [...out.entries()].sort((x,y)=>x[0]<y[0]?-1:1);
+}
+
+function importarFestivos(lista,origen){
+  const st=document.getElementById('fest-imp-status');
+  if(!lista.length){st.className='status bad';st.textContent=`No encontré fechas de ${festYear}. Revisa que el año elegido arriba coincida con el de la lista.`;return}
+  festDraft={y:festYear,lista:lista.map(x=>[x[0],x[1]]),dirty:true};
+  st.className='status ok';st.textContent=`${lista.length} festivos ${origen}. Revísalos y presiona “Guardar festivos del año”.`;renderCfg();
+}
+document.getElementById('fest-calc').addEventListener('click',()=>importarFestivos(festivosCO(festYear).lista,'calculados por ley'));
+document.getElementById('fest-parse').addEventListener('click',()=>importarFestivos(leerFestivos(document.getElementById('fest-paste').value,festYear),'leídos del texto pegado'));
+document.getElementById('fest-web').addEventListener('click',async e=>{
+  const st=document.getElementById('fest-imp-status');st.className='status';st.textContent='Consultando…';e.currentTarget.disabled=true;
+  try{const j=await api('GET','/api/festivos-web/'+festYear);importarFestivos(j.lista||[],'traídos de internet')}
+  catch(err){st.className='status bad';st.textContent='No se pudo consultar internet: '+(err.message||'sin conexión')+'. Puedes pegar la lista o usar los calculados.'}
+  finally{document.getElementById('fest-web').disabled=false}
+});
+document.getElementById('tipos-list').addEventListener('input',e=>{const i=e.target.dataset.tp;if(i==null)return;tiposDraft[+i][e.target.dataset.f]=e.target.value});
+document.getElementById('tipos-list').addEventListener('change',e=>{const i=e.target.dataset.tp;if(i==null)return;tiposDraft[+i][e.target.dataset.f]=e.target.value});
+document.getElementById('tipos-list').addEventListener('click',e=>{const b=e.target.closest('[data-tp-rm]');if(!b)return;tiposDraft.splice(+b.dataset.tpRm,1);document.activeElement?.blur();renderCfg()});
+document.getElementById('tipo-add').addEventListener('click',()=>{tiposDraft.push({id:'t'+Date.now().toString(36),nombre:'',u:'horas'});document.activeElement?.blur();renderCfg();document.getElementById('tp-n-'+(tiposDraft.length-1))?.focus()});
+document.getElementById('tipo-save').addEventListener('click',async()=>{
+  const st=document.getElementById('tipo-status');st.className='status';
+  const lista=tiposDraft.map(t=>({id:t.id,nombre:String(t.nombre||'').trim(),u:t.id==='festivo'?'dias':(t.u==='dias'?'dias':'horas')}));
+  if(lista.some(t=>!t.nombre)){st.className='status bad';st.textContent='Cada tipo necesita un nombre.';return}
+  const nombres=new Set();for(const t of lista){const k=norm(t.nombre);if(nombres.has(k)){st.className='status bad';st.textContent=`El nombre “${t.nombre}” está repetido.`;return}nombres.add(k)}
+  const ids=new Set(lista.map(t=>t.id));const huerf=S.novedades.filter(n=>!ids.has(n.tipo));
+  if(huerf.length){st.className='status bad';st.textContent='No se puede quitar un tipo que tiene novedades registradas.';return}
+  try{st.textContent='Guardando…';await db.doc('config/tipos').set({lista});tiposDraft=null;st.className='status ok';st.textContent='Tipos guardados.';toast('Tipos de novedad guardados')}
+  catch(err){st.className='status bad';st.textContent=errMsg(err)}
+});
+document.getElementById('fest-year').addEventListener('change',e=>{const y=Math.round(+e.target.value);if(y>=2000&&y<=2100){festYear=y;festDraft=null;document.getElementById('fest-status').textContent='';renderCfg()}});
+document.getElementById('fest-list').addEventListener('click',e=>{const b=e.target.closest('[data-fest-rm]');if(!b)return;festDraft.lista=festDraft.lista.filter(x=>x[0]!==b.dataset.festRm);festDraft.dirty=true;renderCfg()});
+document.getElementById('fest-add').addEventListener('click',()=>{
+  const st=document.getElementById('fest-status');st.className='status';const d=document.getElementById('fest-d').value;
+  if(!d){st.className='status bad';st.textContent='Elige la fecha del festivo.';return}
+  if(+d.slice(0,4)!==festYear){st.className='status bad';st.textContent=`La fecha debe ser del año ${festYear}. Cambia el año arriba para editar otro.`;return}
+  if(festDraft.lista.some(x=>x[0]===d)){st.className='status bad';st.textContent='Esa fecha ya está en la lista.';return}
+  const n=(festivosCO(festYear).lista.find(x=>x[0]===d)||[])[1]||'Festivo';
+  festDraft.lista.push([d,n]);festDraft.dirty=true;st.textContent=`Agregado (${n}). Recuerda guardar los festivos del año.`;renderCfg()});
+document.getElementById('fest-save').addEventListener('click',async()=>{
+  const st=document.getElementById('fest-status');st.className='status';
+  if(!db){st.className='status bad';st.textContent='La base de datos no está disponible en esta vista.';return}
+  try{st.textContent='Guardando…';const lista=[...festDraft.lista].sort((p,q)=>p[0]<q[0]?-1:1);
+    await db.doc('festivos/'+festYear).set({anio:festYear,lista,actualizado:new Date().toISOString()});
+    festDraft=null;st.className='status ok';st.textContent=`Festivos de ${festYear} guardados.`;toast('Festivos guardados')}
+  catch(e){st.className='status bad';st.textContent=errMsg(e)}});
+document.getElementById('fest-reset').addEventListener('click',async e=>{
+  const st=document.getElementById('fest-status');st.className='status';
+  await twoStep(e.currentTarget,async()=>{await db.doc('festivos/'+festYear).delete();festDraft=null;st.className='status ok';st.textContent=`${festYear} vuelve a usar los festivos calculados.`},'Cálculo automático restaurado')});
+
+// re-pintar gráficas al cambiar tema
+const mo=new MutationObserver(()=>render());mo.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>render())}catch(e){}
+
+/* ================= Arranque ================= */
+setPreset('mes');
+try{const t=localStorage.getItem('tab');if(t&&document.getElementById('view-'+t))setTab(t);else setTab('dash')}catch(e){setTab('dash')}
+
+/* ---- Capa de datos: Supabase (versión en la nube) ----
+   Generada por construir_nube.py: reemplaza la capa del servidor local de web/index.html.
+   Mantiene la misma interfaz db.doc(ruta).set/delete y db.collection('novedades').add. */
+const SUPABASE_URL='https://ejllgcqopkozqbvebucm.supabase.co';
+const SUPABASE_KEY='sb_publishable_eVXud1_Y4QRI5Jm9XaMq2g_x0o0BkEf';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'seguimiento-soporte-sesion'}});
+let enLote=false,omitidasLote=0,avisoImport='';
+
+function sbErr(e){
+  if(!e)return null;
+  if(e.code&&['forbidden','auth','unavailable','invalid_argument'].includes(e.code))return e;
+  const m=String(e.message||e||'');const c=String(e.code||'');
+  if(/failed to fetch|networkerror|load failed|network request failed/i.test(m))return {code:'unavailable',message:'Sin conexión con Supabase'};
+  if(c==='PGRST301'||c==='PGRST303'||/jwt expired|invalid jwt|refresh token/i.test(m))return {code:'auth',message:'Tu sesión terminó. Ingresa de nuevo.'};
+  if(c==='42501'||/permission denied|row-level security/i.test(m))return {code:'forbidden',message:/permission denied|row-level security/i.test(m)?'Tu rol no permite hacer este cambio.':m};
+  if(c==='23503')return {code:'invalid_argument',message:'el registro está en uso por otros datos (por ejemplo, novedades registradas)',pg:c};
+  return {code:'invalid_argument',message:m.replace(/\.$/,''),pg:c};
+}
+async function ok(q){
+  let r;try{r=await q}catch(e){throw sbErr(e)}
+  if(r.error){const er=sbErr(r.error);if(er.code==='auth')mostrarAuth('login');throw er}
+  return r.data;
+}
+async function todo(tabla,cols,orden){
+  const out=[],N=1000;
+  for(let i=0;;i+=N){
+    let q=sb.from(tabla).select(cols);for(const o of orden)q=q.order(o,{ascending:true});
+    const d=await ok(q.range(i,i+N-1));out.push(...d);if(d.length<N)break;
+  }
+  return out;
+}
+const numOr=v=>v==null?'':(/^\d+$/.test(String(v))?Number(v):v);
+const finDeMes=mes=>finMes(mes+'-01');
+
+/* ---- Lectura: arma el mismo estado que entregaba el servidor local ---- */
+async function leerEstado(){
+  const [cfg,cols,cods,tipos,acts,novs,fAnios,fests,sabs]=await Promise.all([
+    ok(sb.from('configuracion').select('*').eq('id',1)),
+    todo('colaboradoras','id,nombre,color,activa,orden',['orden','nombre']),
+    todo('colaboradora_codigos','codigo,colaboradora_id',['codigo']),
+    todo('tipos_novedad','id,nombre,unidad,orden',['orden','id']),
+    todo('actividades','id,usuario_crm,ticket,act,actividad,linea,minutos,fecha,cliente,creado_en',['fecha','id']),
+    todo('novedades','*',['creado_en','id']),
+    todo('festivos_anios','anio,actualizado_en',['anio']),
+    todo('festivos','fecha,nombre,anio',['fecha']),
+    todo('sabados_laborados','usuario_crm,fecha,registrado_en',['usuario_crm','fecha'])]);
+  const c=cfg[0];
+  const general=c?{horasSemana:+c.horas_semana,horasDia:+c.horas_dia,horasSabado:+c.horas_sabado,descansoMin:+c.descanso_min,
+    descansoCadaH:+c.descanso_cada_h,descuentaDescanso:!!c.descuenta_descanso,periodo:c.periodo,umbralOk:+c.umbral_ok,umbralAlerta:+c.umbral_alerta,
+    ...(Array.isArray(c.lineas_excluidas)?{lineasExcluidas:c.lineas_excluidas}:{}),...(Array.isArray(c.clientes_excluidos)?{clientesExcluidos:c.clientes_excluidos}:{})}:null;
+  const colaboradoras=cols.filter(x=>x.activa).map(x=>({id:x.id,nombre:x.nombre,color:x.color??0,codigos:cods.filter(k=>k.colaboradora_id===x.id).map(k=>k.codigo).join(', ')}));
+  const actividades={};
+  for(const a of acts){const mes=a.fecha.slice(0,7);const id=docIdFor(a.usuario_crm,mes);
+    const d=actividades[id]??={codigo:a.usuario_crm,mes,actualizado:a.creado_en,rows:[]};
+    if(a.creado_en>d.actualizado)d.actualizado=a.creado_en;
+    d.rows.push([a.ticket,numOr(a.act),a.actividad,a.linea,a.minutos,a.fecha,a.cliente])}
+  const novedades=novs.map(n=>({_id:n.id,colab:n.colaboradora_id??'todas',tipo:n.tipo_id,unidad:n.unidad,nota:n.nota||'',creado:n.creado_en,
+    ...(n.unidad==='dias'?{desde:n.desde,hasta:n.hasta}:{fecha:n.fecha,horas:+n.horas})}));
+  const festivos={};for(const f of fAnios)festivos[String(f.anio)]={anio:f.anio,lista:fests.filter(x=>x.anio===f.anio).map(x=>[x.fecha,x.nombre])};
+  const sabados={};
+  for(const s of sabs){const anio=+s.fecha.slice(0,4);const id=sabDocId(s.usuario_crm,anio);
+    const d=sabados[id]??={codigo:s.usuario_crm,anio,fechas:[],actualizado:s.registrado_en};d.fechas.push(s.fecha)}
+  return {general,colaboradoras,tipos:tipos.length?tipos.map(t=>({id:t.id,nombre:t.nombre,u:t.unidad})):null,actividades,novedades,festivos,sabados};
+}
+
+/* ---- Escrituras ---- */
+const filasRpc=rows=>rows.map(r=>({ticket:String(r[0]),act:r[1]===''||r[1]==null?null:String(r[1]),actividad:r[2]??'',linea:r[3]??'',minutos:Math.round(+r[4]||0),fecha:r[5],cliente:r[6]??''}));
+const archivoActual=()=>preview?.name||(enLote?'respaldo importado':null);
+const listaIn=v=>'('+v.map(x=>'"'+String(x).replace(/"/g,'\\"')+'"').join(',')+')';
+
+async function guardarGeneral(d){
+  const n=(v,def)=>Number.isFinite(+v)?+v:def;
+  await ok(sb.from('configuracion').update({horas_semana:n(d.horasSemana,42),horas_dia:n(d.horasDia,8),horas_sabado:n(d.horasSabado,4),
+    descanso_min:n(d.descansoMin,15),descanso_cada_h:n(d.descansoCadaH,4),descuenta_descanso:!!d.descuentaDescanso,periodo:d.periodo||'semana',
+    umbral_ok:n(d.umbralOk,100),umbral_alerta:n(d.umbralAlerta,95),
+    lineas_excluidas:Array.isArray(d.lineasExcluidas)?d.lineasExcluidas:null,clientes_excluidos:Array.isArray(d.clientesExcluidos)?d.clientesExcluidos:null,
+    actualizado_en:new Date().toISOString(),actualizado_por:SESION?.id||null}).eq('id',1));
+}
+async function guardarColabs(lista){
+  const antes=await ok(sb.from('colaboradoras').select('id'));
+  const ids=new Set(lista.map(c=>c.id));
+  if(lista.length)await ok(sb.from('colaboradoras').upsert(lista.map((c,i)=>({id:c.id,nombre:String(c.nombre||'').trim()||'Sin nombre',color:c.color??0,orden:i+1,activa:true}))));
+  const vistos=new Set(),cods=[];
+  for(const c of lista)for(const k of codesOf(c))if(!vistos.has(k)){vistos.add(k);cods.push({codigo:k,colaboradora_id:c.id})}
+  if(cods.length){await ok(sb.from('colaboradora_codigos').upsert(cods));await ok(sb.from('colaboradora_codigos').delete().not('codigo','in',listaIn(cods.map(x=>x.codigo))))}
+  else await ok(sb.from('colaboradora_codigos').delete().neq('codigo',''));
+  for(const a of antes)if(!ids.has(a.id)){
+    const r=await sb.from('colaboradoras').delete().eq('id',a.id);
+    if(r.error){if(r.error.code==='23503')await ok(sb.from('colaboradoras').update({activa:false}).eq('id',a.id));else throw sbErr(r.error)}}
+}
+async function guardarTipos(lista){
+  if(lista.length)await ok(sb.from('tipos_novedad').upsert(lista.map((t,i)=>({id:t.id,nombre:String(t.nombre||'').trim()||'Sin nombre',unidad:t.u==='dias'?'dias':'horas',fijo:t.id==='festivo',orden:i+1}))));
+  await ok(sb.from('tipos_novedad').delete().not('id','in',listaIn(lista.map(t=>t.id).concat('festivo'))));
+}
+async function escribir(p,d){
+  const i=p.indexOf('/');const col=p.slice(0,i),id=p.slice(i+1);
+  if(col==='config'&&id==='general')return guardarGeneral(d);
+  if(col==='config'&&id==='colaboradoras')return guardarColabs(d.lista||[]);
+  if(col==='config'&&id==='tipos')return guardarTipos(d.lista||[]);
+  if(col==='actividades')return ok(sb.rpc('reemplazar_actividades',{p_usuario:String(d.codigo).toUpperCase(),p_desde:d.mes+'-01',p_hasta:finDeMes(d.mes),p_filas:filasRpc(d.rows||[]),p_archivo:archivoActual()}));
+  if(col==='festivos')return ok(sb.rpc('guardar_festivos',{p_anio:+(d.anio||id),p_lista:d.lista||[]}));
+  if(col==='sabados')return ok(sb.rpc('reemplazar_sabados',{p_usuario:String(d.codigo).toUpperCase(),p_anio:+d.anio,p_fechas:d.fechas||[]}));
+  throw new Error('Ruta desconocida: '+p);
+}
+async function borrar(p){
+  const i=p.indexOf('/');const col=p.slice(0,i),id=p.slice(i+1);const j=id.lastIndexOf('_');
+  if(col==='actividades'){const d=S.act[id];const code=String(d?d.codigo:id.slice(0,j)).toUpperCase(),mes=d?d.mes:id.slice(j+1);
+    return ok(sb.rpc('reemplazar_actividades',{p_usuario:code,p_desde:mes+'-01',p_hasta:finDeMes(mes),p_filas:[],p_archivo:'mes eliminado'}))}
+  if(col==='festivos')return ok(sb.from('festivos_anios').delete().eq('anio',+id));
+  if(col==='sabados'){const d=S.sab?.[id];return ok(sb.rpc('reemplazar_sabados',{p_usuario:String(d?d.codigo:id.slice(0,j)).toUpperCase(),p_anio:+(d?d.anio:id.slice(j+1)),p_fechas:[]}))}
+  if(col==='novedades')return ok(sb.from('novedades').delete().eq('id',id));
+  throw new Error('Ruta desconocida: '+p);
+}
+async function agregar(c,d){
+  if(c!=='novedades')throw new Error('Colección desconocida: '+c);
+  const dias=d.unidad==='dias';
+  try{await ok(sb.from('novedades').insert({colaboradora_id:d.colab==='todas'||!d.colab?null:d.colab,tipo_id:d.tipo,unidad:d.unidad,
+    desde:dias?d.desde:null,hasta:dias?d.hasta:null,fecha:dias?null:d.fecha,horas:dias?null:+d.horas,nota:d.nota||''}))}
+  catch(e){if(enLote&&e.pg==='23503'){omitidasLote++;return}throw e}
+}
+const despues=async p=>{const r=await p;if(!enLote)await refrescar();return r};
+const docRef=p=>({set:d=>despues(escribir(p,d)),delete:()=>despues(borrar(p))});
+db={doc:docRef,collection:c=>({doc:id=>docRef(c+'/'+id),add:d=>despues(agregar(c,d))})};
+
+/* Solo se usa para "Traer de internet" en festivos: consulta Nager.Date directamente. */
+async function api(metodo,url){
+  const m=String(url).match(/^\/api\/festivos-web\/(\d{4})$/);
+  if(!m)throw {code:'unavailable',message:'Función no disponible en la versión en la nube'};
+  let r;try{r=await fetch('https://date.nager.at/api/v3/PublicHolidays/'+m[1]+'/CO')}catch(e){throw {code:'unavailable',message:'sin conexión con el servicio de festivos'}}
+  if(!r.ok)throw {code:'unavailable',message:'el servicio de festivos respondió '+r.status};
+  const d=await r.json();
+  return {lista:d.filter(x=>String(x.date||'').startsWith(m[1])).map(x=>[x.date,x.localName||x.name||'Festivo'])};
+}
+
+async function refrescar(){
+  const cb=document.getElementById('conn-banner'),cm=document.getElementById('conn-msg');
+  try{
+    const e=await leerEstado();
+    cb.hidden=true;
+    S.cfg={...DEF_CFG,...(e.general||{})};
+    S.colabs=(e.colaboradoras||[]).map(x=>({...x}));colabDraft=null;
+    S.act=e.actividades||{};
+    S.festDb=e.festivos||{};if(festDraft&&!festDraft.dirty)festDraft=null;
+    S.sab=e.sabados||{};
+    S.novedades=e.novedades||[];
+    setTipos(e.tipos);tiposDraft=null;
+    S.ready={cfg:true,col:true,act:true,nov:true};
+    rebuildNoLab();flatten();render();if(preview)renderPreview();
+  }catch(err){
+    if(err&&(err.code==='auth'||err.code==='forbidden'))throw err;
+    cb.hidden=false;cm.textContent='No hay conexión con Supabase. Revisa tu conexión a internet y vuelve a intentarlo (F5).';
+    throw err;
+  }
+}
+
+/* ---- Acceso: Supabase Auth + tabla perfiles ---- */
+const ROL_TXT={admin:'Administradora',colaboradora:'Colaboradora',consulta:'Consulta'};
+function mostrarAuth(modo,info,obligatorio){
+  const a=document.getElementById('auth');a.hidden=false;
+  for(const id of ['auth-login','auth-setup','auth-remoto','auth-cambiar'])document.getElementById(id).hidden=true;
+  document.getElementById('auth-status').textContent='';
+  if(modo==='login'){SESION=null;document.getElementById('who').hidden=true;document.getElementById('auth-login').hidden=false;setTimeout(()=>document.getElementById('lg-email').focus(),50)}
+  if(modo==='pendiente'){const r=document.getElementById('auth-remoto');r.hidden=false;
+    r.innerHTML=`<h2>Cuenta pendiente de activación</h2><p class="help" style="margin:0">La cuenta <b>${esc(info||'')}</b> todavía no está activa. Pídele a una administradora que la active y le asigne un rol en Configuración → Usuarios.</p><button class="btn" type="button" id="pend-salir" style="margin-top:12px">Salir</button>`}
+  if(modo==='cambiar'){document.getElementById('auth-cambiar').hidden=false;document.getElementById('cb-cancelar').hidden=!!obligatorio;
+    document.getElementById('cb-ayuda').textContent=obligatorio?'Estás usando una contraseña temporal. Elige una nueva de al menos 8 caracteres para continuar.':'Elige una contraseña nueva de al menos 8 caracteres.';
+    setTimeout(()=>document.getElementById('cb-actual').focus(),50)}
+}
+function ocultarAuth(){document.getElementById('auth').hidden=true;for(const id of ['lg-clave','st-clave','st-clave2','cb-actual','cb-nueva','cb-nueva2'])document.getElementById(id).value=''}
+function aplicarSesion(j){
+  SESION=j;isAdmin=j.rol==='admin';canWrite=j.rol!=='consulta';usrCargados=false;
+  document.getElementById('who').hidden=false;document.getElementById('who-name').textContent=j.nombre||j.email;document.getElementById('who-rol').textContent=ROL_TXT[j.rol]||j.rol;
+}
+async function iniciarApp(){
+  const cb=document.getElementById('conn-banner'),cm=document.getElementById('conn-msg');
+  let s;
+  try{const r=await sb.auth.getSession();s=r.data&&r.data.session}
+  catch(e){cb.hidden=false;cm.textContent='No hay conexión con Supabase. Revisa tu conexión a internet.';return}
+  if(!s){mostrarAuth('login');return}
+  let p;
+  try{p=(await ok(sb.from('perfiles').select('*').eq('id',s.user.id)))[0]}
+  catch(e){if(e.code==='auth')return;cb.hidden=false;cm.textContent='No se pudo leer tu perfil: '+(e.message||'sin conexión')+'.';return}
+  if(!p||!p.activo){mostrarAuth('pendiente',s.user.email);return}
+  aplicarSesion({id:p.id,email:p.email,nombre:p.nombre,rol:p.rol,debe_cambiar:!!p.debe_cambiar});
+  if(p.debe_cambiar){mostrarAuth('cambiar',null,true);return}
+  ocultarAuth();await refrescar().catch(()=>{});render();
+}
+const authSt=(t,ok)=>{const st=document.getElementById('auth-status');st.className='status '+(ok?'ok':'bad');st.textContent=t};
+document.getElementById('auth-login').addEventListener('submit',async e=>{e.preventDefault();
+  authSt('Ingresando…',true);
+  try{const {error}=await sb.auth.signInWithPassword({email:document.getElementById('lg-email').value.trim().toLowerCase(),password:document.getElementById('lg-clave').value});
+    if(error){authSt(/invalid login|invalid_credentials|invalid grant/i.test(error.message+(error.code||''))?'Correo o contraseña incorrectos.':/fetch|network/i.test(error.message)?'Sin conexión con Supabase. Revisa tu internet.':error.message);return}
+    await iniciarApp()}
+  catch(err){authSt('Sin conexión con Supabase. Revisa tu internet.')}});
+document.getElementById('auth-cambiar').addEventListener('submit',async e=>{e.preventDefault();
+  const n=document.getElementById('cb-nueva').value;if(n!==document.getElementById('cb-nueva2').value){authSt('Las contraseñas nuevas no coinciden.');return}
+  if(n.length<8){authSt('La contraseña nueva debe tener al menos 8 caracteres.');return}
+  try{
+    const v=await sb.auth.signInWithPassword({email:SESION.email,password:document.getElementById('cb-actual').value});
+    if(v.error){authSt('La contraseña actual no es correcta.');return}
+    const u=await sb.auth.updateUser({password:n});
+    if(u.error){authSt(/same|different/i.test(u.error.message)?'La contraseña nueva debe ser distinta de la actual.':/weak|short|least/i.test(u.error.message)?'La contraseña nueva es muy débil: usa al menos 8 caracteres combinando letras y números.':u.error.message);return}
+    try{await ok(sb.rpc('marcar_clave_cambiada'))}catch(err){}
+    toast('Contraseña actualizada');await iniciarApp()}
+  catch(err){authSt(err.message||'No se pudo cambiar la contraseña.')}});
+document.getElementById('cb-cancelar').addEventListener('click',()=>ocultarAuth());
+document.getElementById('btn-clave').addEventListener('click',()=>mostrarAuth('cambiar',null,false));
+async function salir(){try{await sb.auth.signOut()}catch(e){}SESION=null;S.act={};S.novedades=[];flatten();mostrarAuth('login')}
+document.getElementById('btn-salir').addEventListener('click',salir);
+document.getElementById('auth-remoto').addEventListener('click',e=>{if(e.target.id==='pend-salir')salir()});
+
+/* ---- Usuarios (Configuración → Usuarios) ---- */
+let usrCargados=false,usuarios=[];
+(()=>{const f=document.getElementById('usr-form');f.hidden=true;
+  const p=document.createElement('p');p.className='help';p.style.marginTop='14px';
+  p.innerHTML='Para agregar a una persona: en Supabase abre <b>Authentication → Users → Add user → Create new user</b>, escribe su correo y una contraseña y deja marcado <b>Auto Confirm User</b>. Aparecerá aquí como <b>Consulta</b> e inactiva: asígnale el rol y márcala como activa.';
+  f.parentNode.insertBefore(p,f)})();
+async function cargarUsuarios(){
+  usrCargados=true;
+  try{usuarios=await ok(sb.rpc('usuarios_app'));pintarUsuarios()}
+  catch(e){const st=document.getElementById('usr-status');st.className='status bad';st.textContent=/usuarios_app/.test(e.message||'')?'Falta ejecutar en Supabase el script 02_usuarios.sql.':errMsg(e)}
+}
+function pintarUsuarios(){
+  const t=document.getElementById('tbl-usr');const yo=SESION?.email;
+  t.innerHTML='<thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Activo</th><th>Último ingreso</th><th></th></tr></thead><tbody>'+usuarios.map(u=>{const mio=u.email===yo;const k=encodeURIComponent(u.email);
+    return `<tr><td>${esc(u.nombre)}${mio?' <span class="chip na">Tú</span>':''}${u.debe_cambiar?' <span class="chip warn">Contraseña temporal</span>':''}${!u.activo?' <span class="chip warn">Inactiva</span>':''}</td><td>${esc(u.email)}</td>
+    <td><select data-usr-rol="${k}" ${mio?'disabled':''} aria-label="Rol de ${esc(u.nombre)}">${['admin','colaboradora','consulta'].map(r=>`<option value="${r}" ${u.rol===r?'selected':''}>${ROL_TXT[r]}</option>`).join('')}</select></td>
+    <td><input type="checkbox" data-usr-act="${k}" ${u.activo?'checked':''} ${mio?'disabled':''} aria-label="Activo"></td>
+    <td class="small muted">${u.ultimo_ingreso?esc(new Date(u.ultimo_ingreso).toLocaleString('es-CO',{dateStyle:'medium',timeStyle:'short'})):'Nunca'}</td>
+    <td class="r" style="white-space:nowrap">${mio?'':`<button class="btn sm" type="button" data-usr-reset="${k}">Restablecer contraseña</button> <button class="btn sm danger" type="button" id="usr-del-${k.replace(/[^A-Za-z0-9]/g,'')}" data-usr-del="${k}">${txtBorrar('usr-del-'+k.replace(/[^A-Za-z0-9]/g,''))}</button>`}</td></tr>`}).join('')+'</tbody>';
+}
+function mostrarTemporal(email,clave){
+  const b=document.getElementById('usr-temp');b.hidden=false;
+  b.innerHTML=`<div class="banner"><span>Contraseña temporal de <b>${esc(email)}</b>: <span class="temp-pass">${esc(clave)}</span> · Cópiala ahora; no se volverá a mostrar. Al ingresar, la aplicación le pedirá cambiarla.</span><button class="btn sm" type="button" id="usr-temp-ok">Listo</button></div>`;
+}
+document.getElementById('usr-panel').addEventListener('click',async e=>{
+  const st=document.getElementById('usr-status');st.className='status';st.textContent='';
+  if(e.target.id==='usr-temp-ok'){document.getElementById('usr-temp').hidden=true;return}
+  const rs=e.target.closest('[data-usr-reset]');
+  if(rs){const em=decodeURIComponent(rs.dataset.usrReset);try{const clave=await ok(sb.rpc('restablecer_clave',{p_email:em}));mostrarTemporal(em,clave);await cargarUsuarios()}catch(err){st.className='status bad';st.textContent=errMsg(err)}return}
+  const del=e.target.closest('[data-usr-del]');
+  if(del){const em=decodeURIComponent(del.dataset.usrDel);await twoStep(del,async()=>{await ok(sb.rpc('eliminar_usuario',{p_email:em}));await cargarUsuarios()},'Usuario eliminado');return}
+});
+document.getElementById('usr-panel').addEventListener('change',async e=>{
+  const st=document.getElementById('usr-status');st.className='status';
+  const r=e.target.closest('[data-usr-rol]'),a=e.target.closest('[data-usr-act]');if(!r&&!a)return;
+  const em=decodeURIComponent((r||a).dataset.usrRol||(r||a).dataset.usrAct);
+  try{const filas=await ok(sb.from('perfiles').update(r?{rol:r.value}:{activo:a.checked}).eq('email',em).select('email'));
+    if(!filas.length)throw {code:'forbidden',message:'Tu rol no permite cambiar usuarios.'};
+    st.className='status ok';st.textContent='Cambios guardados.'}
+  catch(err){st.className='status bad';st.textContent=errMsg(err)}
+  await cargarUsuarios();
+});
+
+iniciarApp();
+sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT'&&SESION){SESION=null;mostrarAuth('login')}});
+// Si otra persona cambió los datos, se recargan al volver a esta ventana.
+window.addEventListener('focus',()=>{if(SESION&&!SESION.debe_cambiar)refrescar().catch(()=>{})});
+</script>
+
+</body>
+</html>
