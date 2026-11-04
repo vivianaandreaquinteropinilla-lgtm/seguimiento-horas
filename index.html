@@ -155,6 +155,15 @@ th .arr{opacity:.7}
 .tbl-dia tr.fest td{color:var(--fg-3)}
 .tbl-dia tfoot td{border-top:1px solid var(--line-strong);font-weight:700}
 .tbl-dia .nv{display:block;font-size:11px;font-weight:500;color:var(--fg-3);white-space:nowrap}
+.dia-tog{background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-align:left}
+.dia-tog::before{content:'▸';display:inline-block;width:10px;color:var(--fg-3);font-size:11px}
+.dia-tog[aria-expanded="true"]::before{content:'▾'}
+.dia-tog:hover{color:var(--accent)}
+.tbl-dia .dia-sin{display:inline-block;width:16px}
+.tbl-dia tr.dia-det>td{background:var(--surface-2);padding:6px 10px 12px 26px}
+.tbl-dia tr.dia-det table{width:100%;font-size:12.5px}
+.tbl-dia tr.dia-det th{position:static;background:none;font-size:11px;padding:4px 8px}
+.tbl-dia tr.dia-det td{background:none;padding:4px 8px;border-top:1px solid var(--line)}
 .pctcell .num{min-width:46px;text-align:right;font-weight:600}
 
 .chart-box{position:relative;height:280px}
@@ -936,9 +945,18 @@ function novedadesDia(p,d){
     else if(n.unidad==='horas'&&n.fecha===d)out.push({t:n.tipo,h:+n.horas||0});}
   return out;
 }
+const diaAbiertos=new Set();let ultimaDia=null;
+function detalleDia(sel,d,acts){
+  const ids=new Set(sel.map(p=>p.id));const pById=Object.fromEntries(sel.map(p=>[p.id,p]));const short=shortNames(sel);const nom=Object.fromEntries(sel.map((p,i)=>[p.id,short[i]]));
+  const xs=acts.filter(x=>x.fecha===d&&ids.has(x.pid)).sort((a,b)=>(sel.findIndex(p=>p.id===a.pid)-sel.findIndex(p=>p.id===b.pid))||b.min-a.min);
+  const varias=sel.length>1;
+  return `<table><thead><tr>${varias?'<th>Colaboradora</th>':''}<th>Cliente</th><th>Caso</th><th>Actividad</th><th class="r">Tiempo</th></tr></thead><tbody>${xs.map(x=>`<tr>${varias?`<td style="white-space:nowrap"><span class="who"><span class="dot" style="--c:${colorOf(pById[x.pid])}"></span>${esc(nom[x.pid])}</span></td>`:''}<td class="wrapcell">${esc(x.cliente)}</td><td class="num" style="white-space:nowrap">${esc(x.ticket)}</td><td class="wrapcell">${esc(x.actividad||'')}</td><td class="r num" style="white-space:nowrap">${fmtH(x.min/60)}</td></tr>`).join('')}</tbody></table>`;
+}
 function renderTablaDia(sel,dLabels,acts){
+  ultimaDia=[sel,dLabels,acts];
   const esp=(+S.cfg.horasDia||0)*factorReporte();
-  document.getElementById('dia-tbl-sub').textContent=`Jornada esperada de lunes a viernes: ${fmtH(esp)} reportadas. En ámbar los días por debajo, en rojo los días hábiles sin reporte. Los sábados aparecen sombreados.`;
+  document.getElementById('dia-tbl-sub').textContent=`Jornada esperada de lunes a viernes: ${fmtH(esp)} reportadas. En ámbar los días por debajo, en rojo los días hábiles sin reporte. Los sábados aparecen sombreados. Haz clic en un día para ver sus actividades.`;
+  const conActs=new Set(acts.filter(x=>sel.some(p=>p.id===x.pid)).map(x=>x.fecha));
   const m={};for(const x of acts){const k=x.pid+'|'+x.fecha;m[k]=(m[k]||0)+x.min/60}
   const tot=sel.map(()=>0);let gran=0;
   const short=shortNames(sel);
@@ -949,7 +967,11 @@ function renderTablaDia(sel,dLabels,acts){
       let cls='';if(exp>0&&d<=hoy){if(h===0)cls='c-zero';else if(h+1e-6<exp)cls='c-low'}
       return `<td class="r ${cls}">${h?fmtH(h):(exp>0&&d<=hoy?'0:00':'—')}${nvTxt}</td>`}).join('');
     gran+=rowT;
-    return `<tr class="${w===6?'sat':''} ${fest?'fest':''}"><td style="white-space:nowrap">${DIAS[w]} ${fCorta(d)}${fest?' <span class="chip na">Festivo</span>':''}</td>${cells}${sel.length>1?`<td class="r"><b>${rowT?fmtH(rowT):'—'}</b></td>`:''}</tr>`}).join('');
+    const ab=diaAbiertos.has(d)&&conActs.has(d);
+    const etq=`${DIAS[w]} ${fCorta(d)}`;
+    const celdaDia=conActs.has(d)?`<button type="button" class="dia-tog" data-dia="${d}" aria-expanded="${ab}">${etq}</button>`:`<span class="dia-sin"></span>${etq}`;
+    return `<tr class="${w===6?'sat':''} ${fest?'fest':''}"><td style="white-space:nowrap">${celdaDia}${fest?' <span class="chip na">Festivo</span>':''}</td>${cells}${sel.length>1?`<td class="r"><b>${rowT?fmtH(rowT):'—'}</b></td>`:''}</tr>`+
+      (ab?`<tr class="dia-det"><td colspan="${1+sel.length+(sel.length>1?1:0)}">${detalleDia(sel,d,acts)}</td></tr>`:'')}).join('');
   document.getElementById('tbl-dia').innerHTML=`<thead><tr><th>Día</th>${sel.map((p,i)=>`<th class="r"><span class="who"><span class="dot" style="--c:${colorOf(p)}"></span>${esc(short[i])}</span></th>`).join('')}${sel.length>1?'<th class="r">Total</th>':''}</tr></thead><tbody>${body}</tbody>
     <tfoot><tr><td>Total del rango</td>${tot.map(t=>`<td class="r">${fmtH(t)}</td>`).join('')}${sel.length>1?`<td class="r">${fmtH(gran)}</td>`:''}</tr></tfoot>`;
 }
@@ -1979,6 +2001,8 @@ const txtBorrar=k=>armado.k===k&&Date.now()-armado.t<=4000?'¿Confirmar?':'Elimi
 document.getElementById('f-desde').addEventListener('change',e=>{if(e.target.value){S.desde=e.target.value;if(S.hasta<S.desde)S.hasta=S.desde;S.preset='';render()}});
 document.getElementById('f-hasta').addEventListener('change',e=>{if(e.target.value){S.hasta=e.target.value;if(S.hasta<S.desde)S.desde=S.hasta;S.preset='';render()}});
 document.getElementById('btn-xlsx').addEventListener('click',descargarInforme);
+document.getElementById('tbl-dia').addEventListener('click',e=>{const b=e.target.closest('[data-dia]');if(!b)return;const d=b.dataset.dia;if(diaAbiertos.has(d))diaAbiertos.delete(d);else diaAbiertos.add(d);
+  if(ultimaDia){renderTablaDia(...ultimaDia);document.querySelector(`#tbl-dia [data-dia="${d}"]`)?.focus()}else render()});
 document.getElementById('ld-desde').addEventListener('change',e=>{ldF.desde=e.target.value;if(ldF.desde&&ldF.hasta&&ldF.hasta<ldF.desde)ldF.hasta=ldF.desde;armado={k:null,t:0};renderLoaded()});
 document.getElementById('ld-hasta').addEventListener('change',e=>{ldF.hasta=e.target.value;if(ldF.desde&&ldF.hasta&&ldF.hasta<ldF.desde)ldF.desde=ldF.hasta;armado={k:null,t:0};renderLoaded()});
 document.getElementById('ld-user').addEventListener('change',e=>{ldF.user=e.target.value;armado={k:null,t:0};renderLoaded()});
