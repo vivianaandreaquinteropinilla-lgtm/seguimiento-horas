@@ -125,9 +125,19 @@ th .arr{opacity:.7}
 .ans-row{padding:14px 0;border-top:1px solid var(--line)}
 .ans-row:first-child{border-top:0;padding-top:4px}
 .ans-head{display:grid;grid-template-columns:minmax(150px,1fr) minmax(180px,2.6fr) minmax(110px,auto);gap:16px;align-items:center}
-.ans-bar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--surface-2);margin-bottom:4px}
+.ans-track{position:relative;margin-bottom:6px}
+.ans-bar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--surface-2)}
 .ans-bar i{display:block;height:100%}
-.ans-bar .c{background:var(--ok)} .ans-bar .v{background:var(--bad)} .ans-bar .p{background:var(--warn)}
+.ans-bar .c.ok,.ans-sw.ok{background:var(--ok)} .ans-bar .c.warn,.ans-sw.warn{background:var(--warn)} .ans-bar .c.bad,.ans-sw.bad{background:var(--bad)}
+.ans-bar .v,.ans-sw.v{background:var(--bad-bg);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--bad) 35%,transparent)}
+.ans-bar .p,.ans-sw.p{background:var(--warn-bg);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--warn) 35%,transparent)}
+.ans-track .meta{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--fg-2)}
+.ans-pct{font-size:20px;font-weight:700}
+.ans-pct.ok{color:var(--ok)} .ans-pct.warn{color:var(--warn)} .ans-pct.bad{color:var(--bad)}
+.ans-leyenda{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--fg-3);margin:-4px 0 10px}
+.ans-leyenda span{display:inline-flex;align-items:center;gap:6px}
+.ans-sw{display:inline-block;width:14px;height:8px;border-radius:3px}
+.ans-sw.m{width:2px;height:12px;background:var(--fg-2);border-radius:1px}
 .ans-venc{margin:12px 0 0;display:flex;flex-direction:column;gap:6px}
 .ans-venc details{border:1px solid var(--line);border-radius:8px;background:var(--surface-2)}
 .ans-venc summary{cursor:pointer;padding:8px 12px;font-size:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;list-style:none}
@@ -430,7 +440,8 @@ body.pdf-mode #cli-q,body.pdf-mode #cli-more{display:none}
     <div id="an-body" style="display:flex;flex-direction:column;gap:18px">
       <div class="kpis" id="an-kpis"></div>
       <div class="panel">
-        <div class="panel-head"><div><h2>Cumplimiento por colaboradora</h2><p>Verde: resueltos a tiempo · rojo: vencidos · amarillo: por confirmar. El porcentaje compara los casos a tiempo con los ya evaluados. Abre cada cliente para ver los casos que no cumplieron.</p></div></div>
+        <div class="panel-head"><div><h2>Cumplimiento por colaboradora</h2><p>El porcentaje compara los casos resueltos a tiempo con los ya evaluados. Abre cada cliente para ver los casos que no cumplieron.</p></div></div>
+        <div class="ans-leyenda" id="an-leyenda"></div>
         <div id="an-colabs"></div>
       </div>
       <div class="panel">
@@ -1746,6 +1757,9 @@ function evaluarCasos(){
   });
 }
 
+// Escala de cumplimiento de tiempos de respuesta (mismos colores del tablero)
+const ANS_META=95,ANS_ALERTA=90;
+const nivelAns=p=>p==null?{k:'na',t:'Sin evaluar'}:p>=ANS_META?{k:'ok',t:'Óptimo'}:p>=ANS_ALERTA?{k:'warn',t:'Aceptable'}:{k:'bad',t:'Crítico'};
 let ansF={desde:'',hasta:'',colab:'todas',sev:''},ansPend=null,ansLimDraft=null,ansLimDirty=false;
 function ansFiltrados(){
   const ev=evaluarCasos();
@@ -1784,7 +1798,7 @@ function renderAns(){
   const c=cnt('cumple'),v=cnt('vencido'),pc=cnt('confirmar'),cu=cnt('curso'),sr=cnt('sinregla');const evd=c+v;const pct=evd?c/evd*100:null;
   document.getElementById('an-kpis').innerHTML=[
     ['Casos creados',fmtN(xs.length),sr?`${sr} sin regla de póliza (no se evalúan)`:'En el rango elegido'],
-    ['Resueltos a tiempo',pct==null?'—':fmtN(pct,1)+'%',`${fmtN(c)} de ${fmtN(evd)} evaluados`],
+    ['Resueltos a tiempo',pct==null?'—':`<span class="ans-pct ${nivelAns(pct).k}" style="font-size:inherit">${fmtN(pct,1)}%</span>`,`${fmtN(c)} de ${fmtN(evd)} evaluados · <span class="chip ${nivelAns(pct).k}">${nivelAns(pct).t}</span>`],
     ['Vencidos',fmtN(v),v?'Pasaron el límite de su póliza':'Ninguno'],
     ['Por confirmar',fmtN(pc),'Respuesta el día del vencimiento, falta la hora'],
     ['En curso o sin datos',fmtN(cu),'Aún dentro del límite, o faltan actividades por cargar']
@@ -1792,22 +1806,23 @@ function renderAns(){
   // por colaboradora
   const grupos={};for(const x of xs)(grupos[x.pid]??=[]).push(x);
   const orden=Object.keys(grupos).map(id=>pById[id]||{id,nombre:id.replace(/^code:/,'')||'Sin responsable',color:5}).sort((a,b)=>{const ra=ps.findIndex(p=>p.id===a.id),rb=ps.findIndex(p=>p.id===b.id);return (ra<0?99:ra)-(rb<0?99:rb)});
+  document.getElementById('an-leyenda').innerHTML=`<span><i class="ans-sw ok"></i>Óptimo: ${ANS_META} % o más</span><span><i class="ans-sw warn"></i>Aceptable: ${ANS_ALERTA} % a ${ANS_META-0.1} %</span><span><i class="ans-sw bad"></i>Crítico: menos de ${ANS_ALERTA} %</span><span><i class="ans-sw v"></i>Vencidos</span><span><i class="ans-sw p"></i>Por confirmar</span><span><i class="ans-sw m"></i>Meta ${ANS_META} %</span>`.replace(/(\d)\.(\d)/g,'$1,$2');
   document.getElementById('an-colabs').innerHTML=orden.map(p=>{const g=grupos[p.id];
     const gc=g.filter(x=>x.estado==='cumple').length,gv=g.filter(x=>x.estado==='vencido'),gp=g.filter(x=>x.estado==='confirmar'),gcu=g.filter(x=>x.estado==='curso').length;
     const tot=gc+gv.length+gp.length;const pp=gc+gv.length?gc/(gc+gv.length)*100:null;
-    const w=n=>tot?n/tot*100:0;
+    const w=n=>tot?n/tot*100:0;const nv=nivelAns(pp);
     return `<div class="ans-row"><div class="ans-head">
       <span class="who"><span class="dot" style="--c:${colorOf(p)}"></span><b>${esc(p.nombre)}</b></span>
-      <div><div class="ans-bar" role="img" aria-label="${gc} a tiempo, ${gv.length} vencidos, ${gp.length} por confirmar"><i class="c" style="width:${w(gc)}%"></i><i class="v" style="width:${w(gv.length)}%"></i><i class="p" style="width:${w(gp.length)}%"></i></div>
+      <div><div class="ans-track"><div class="ans-bar" role="img" aria-label="${gc} a tiempo, ${gv.length} vencidos, ${gp.length} por confirmar"><i class="c ${nv.k}" style="width:${w(gc)}%"></i><i class="v" style="width:${w(gv.length)}%"></i><i class="p" style="width:${w(gp.length)}%"></i></div><b class="meta" style="left:calc(${ANS_META}% - 1px)" title="Meta ${ANS_META} %"></b></div>
         <span class="small muted">${fmtN(gc)} a tiempo · ${fmtN(gv.length)} vencidos${gp.length?` · ${fmtN(gp.length)} por confirmar`:''}${gcu?` · ${fmtN(gcu)} en curso`:''}</span></div>
-      <span style="text-align:right"><span class="num" style="font-size:20px;font-weight:700">${pp==null?'—':fmtN(pp,1)+'%'}</span><br><span class="chip ${gv.length?'bad':'ok'}">${gv.length?`${gv.length} ${gv.length===1?'vencido':'vencidos'}`:'Sin vencidos'}</span></span>
+      <span style="text-align:right"><span class="num ans-pct ${nv.k}">${pp==null?'—':fmtN(pp,1)+'%'}</span><br><span class="chip ${nv.k}">${nv.t}</span></span>
     </div>${bloqueClientes(gv,'Casos que no cumplieron, por cliente')}${bloqueClientes(gp,'Por confirmar (la respuesta fue el mismo día del vencimiento)').replace(/chip bad/g,'chip warn')}</div>`}).join('');
   // matriz póliza x severidad
   const pols=[...new Set([...ansLimites().map(r=>polKey(r.poliza)),...xs.map(x=>x.pol)])];
   document.getElementById('an-matriz-sub').textContent='Casos resueltos a tiempo / casos evaluados en cada combinación. Entre paréntesis, el límite (horas hábiles o días calendario).';
   document.getElementById('tbl-ans-matriz').innerHTML=`<thead><tr><th>Póliza</th>${SEVS.map(s=>`<th class="r">${SEV_TXT[s]}</th>`).join('')}<th class="r">Total</th></tr></thead><tbody>`+
     pols.map(pl=>{const fx=xs.filter(x=>x.pol===pl);if(!fx.length&&!ansLimites().some(r=>polKey(r.poliza)===pl))return '';
-      const celda=arr=>{const a=arr.filter(x=>x.estado==='cumple').length,e=a+arr.filter(x=>x.estado==='vencido').length;return e?`<b>${a}/${e}</b> <span class="muted">${fmtN(a/e*100,0)}%</span>`:(arr.length?`<span class="muted">${arr.length} sin evaluar</span>`:'<span class="muted">—</span>')};
+      const celda=arr=>{const a=arr.filter(x=>x.estado==='cumple').length,e=a+arr.filter(x=>x.estado==='vencido').length;return e?`<b>${a}/${e}</b> <span class="ans-pct ${nivelAns(a/e*100).k}" style="font-size:inherit;font-weight:600">${fmtN(a/e*100,0)}%</span>`:(arr.length?`<span class="muted">${arr.length} sin evaluar</span>`:'<span class="muted">—</span>')};
       return `<tr><td><b>${esc(pl)}</b>${limiteANS(pl,'funcional')==null&&limiteANS(pl,'bloqueante')==null?' <span class="chip na">Sin regla</span>':''}</td>${SEVS.map(s=>{const l=limiteANS(pl,s);return `<td class="r">${celda(fx.filter(x=>x.sev===s))}${l?` <span class="small muted">(${fLim(l,unidadANS(reglaANS(pl).row))})</span>`:''}</td>`}).join('')}<td class="r">${celda(fx)}</td></tr>`}).join('')+'</tbody>';
 }
 
