@@ -451,10 +451,10 @@ body.pdf-mode #cli-q,body.pdf-mode #cli-more{display:none}
       <p class="help">Importar agrega los casos nuevos y actualiza los que ya estaban, por número de caso. Sirve la consulta de casos tal como sale del CRM.</p>
     </div>
     <div class="panel">
-      <div class="panel-head"><div><h2>Límites por póliza</h2><p>Horas hábiles máximas para resolver un caso según la póliza del cliente y la severidad. Solo las administradoras pueden cambiarlos.</p></div></div>
+      <div class="panel-head"><div><h2>Límites por póliza</h2><p>Tiempo máximo para resolver un caso según la póliza del cliente y la severidad. Solo las administradoras pueden cambiarlos.</p></div></div>
       <div class="tbl-wrap"><table id="tbl-ans-lim"></table></div>
       <div class="form-actions"><button class="btn" type="button" id="an-lim-add">Agregar póliza</button><button class="btn primary" type="button" id="an-lim-save">Guardar límites</button><span class="status" id="an-lim-status"></span></div>
-      <p class="help">La póliza se compara sin las palabras “Póliza” y “Tipo” ni lo que esté entre paréntesis: “PÓLIZA TIPO C (…)” se toma como <b>C</b>, “PÓLIZA TIPO D+” como <b>D+</b> y “SIN PÓLIZA” como <b>SIN POLIZA</b>. Los casos de pólizas que no estén en esta tabla no se evalúan.</p>
+      <p class="help">La póliza se compara sin las palabras “Póliza” y “Tipo” ni lo que esté entre paréntesis: “PÓLIZA TIPO C (…)” se toma como <b>C</b>, “PÓLIZA TIPO D+” como <b>D+</b> y “SIN PÓLIZA” como <b>SIN POLIZA</b>. En <b>También aplica a</b> escribe otros nombres del CRM que deben usar esa misma regla, separados por comas (por ejemplo, “PÓLIZA CLIENTE” se toma como <b>E</b>). <b>Horas hábiles</b> cuenta solo la jornada (lunes a viernes 8-12 y 2-6, sábado 8-12, sin festivos); <b>Días calendario</b> cuenta todos los días desde la hora de creación. Los casos de pólizas que no estén en esta tabla no se evalúan.</p>
     </div>
   </section>
 
@@ -1674,7 +1674,8 @@ async function descargarInforme(){
 
 async function guardarArchivo(nombre,buf,mime,msg){const url=URL.createObjectURL(new Blob([buf],{type:mime||'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));const a=document.createElement('a');a.href=url;a.download=nombre;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);toast(msg||'Informe descargado')}
 /* ================= Tiempos de respuesta (ANS por póliza) ================= */
-const ANS_DEF=[{poliza:'A',bloqueante:8,funcional:16,presentacion:32},{poliza:'B',bloqueante:20,funcional:48,presentacion:60},{poliza:'C',bloqueante:24,funcional:60,presentacion:96}];
+const ANS_DEF=[{poliza:'A',unidad:'horas',bloqueante:8,funcional:16,presentacion:32,alias:''},{poliza:'B',unidad:'horas',bloqueante:20,funcional:48,presentacion:60,alias:''},
+  {poliza:'C',unidad:'horas',bloqueante:24,funcional:60,presentacion:96,alias:''},{poliza:'E',unidad:'dias',bloqueante:30,funcional:30,presentacion:30,alias:'CLIENTE'}];
 const SEVS=['bloqueante','funcional','presentacion'];
 const SEV_TXT={bloqueante:'Bloqueante',funcional:'Funcional',presentacion:'Presentación'};
 const ansLimites=()=>Array.isArray(S.cfg.ansLimites)&&S.cfg.ansLimites.length?S.cfg.ansLimites:ANS_DEF;
@@ -1683,13 +1684,20 @@ function polKey(v){let s=String(v??'').normalize('NFD').replace(/[̀-ͯ]/g,'').t
   s=s.replace(/\(.*$/,'').replace(/\bPOLIZA\b/g,'').replace(/\bTIPO\b/g,'').replace(/\s+/g,' ').trim();
   return !s||s==='SIN'?'SIN POLIZA':s}
 function sevKey(v){const s=norm(v);if(s.startsWith('bloq'))return 'bloqueante';if(s.startsWith('func'))return 'funcional';if(s.startsWith('pres'))return 'presentacion';return ''}
-function limiteANS(pol,sev){const r=ansLimites().find(x=>polKey(x.poliza)===pol);const h=r?+r[sev]:NaN;return isFinite(h)&&h>0?h:null}
+const aliasDe=r=>String(r.alias||'').split(',').map(x=>x.trim()).filter(Boolean).map(polKey);
+// Regla de la póliza: por su nombre o por un nombre equivalente ("También aplica a"). Devuelve la clave de la regla.
+function reglaANS(v){const k=polKey(v);const r=ansLimites().find(x=>polKey(x.poliza)===k)||ansLimites().find(x=>aliasDe(x).includes(k));return {pol:r?polKey(r.poliza):k,row:r||null}}
+function limiteANS(pol,sev){const {row}=reglaANS(pol);const h=row?+row[sev]:NaN;return isFinite(h)&&h>0?h:null}
+const unidadANS=row=>row&&row.unidad==='dias'?'dias':'horas';
+const fLim=(n,u)=>n==null?'—':(u==='dias'?`${fmtN(n)} ${n===1?'día':'días'}`:`${fmtN(n)} h`);
 // Jornada hábil: lunes a viernes 8:00-12:00 y 14:00-18:00; sábado 8:00-12:00; sin domingos, festivos ni días no laborables.
 function franjasANS(d){const w=dow(d);if(w===0||esFestivo(d))return [];return w===6?[[480,720]]:[[480,720],[840,1080]]}
 const dtP=s=>({d:String(s).slice(0,10),m:(+String(s).slice(11,13)||0)*60+(+String(s).slice(14,16)||0)});
 const dtF=(d,m)=>`${d}T${pad(Math.floor(m/60))}:${pad(m%60)}`;
 const finJornada=d=>{const f=franjasANS(d);return f.length?f[f.length-1][1]:0};
-function venceANS(creado,horas){let rest=Math.round(horas*60);let {d,m}=dtP(creado);
+function venceANS(creado,horas,unidad){
+  if(unidad==='dias'){const {d,m}=dtP(creado);const t=Math.round(horas*1440)+m;return dtF(add(d,Math.floor(t/1440)),t%1440)}
+  let rest=Math.round(horas*60);let {d,m}=dtP(creado);
   for(let i=0;i<1500;i++){for(const [a,b] of franjasANS(d)){const s=Math.max(a,m);if(s>=b)continue;if(b-s>=rest)return dtF(d,s+rest);rest-=b-s}d=add(d,1);m=0}return null}
 function minHabiles(desde,hasta){if(!desde||!hasta||hasta<=desde)return 0;let {d,m}=dtP(desde);const h=dtP(hasta);let t=0;
   for(let i=0;i<3000&&d<=h.d;i++){for(const [a,b] of franjasANS(d)){const s=Math.max(a,m),e=d===h.d?Math.min(b,h.m):b;if(e>s)t+=e-s}d=add(d,1);m=0}return t}
@@ -1702,11 +1710,11 @@ function evaluarCasos(){
   const ult={},hasta={};for(const x of S.acts){if(!ult[x.ticket]||x.fecha>ult[x.ticket])ult[x.ticket]=x.fecha;if(!hasta[x.code]||x.fecha>hasta[x.code])hasta[x.code]=x.fecha}
   const map=codeMap();const ahora=ahoraISO();
   return (S.tickets||[]).map(t=>{
-    const pol=polKey(t.poliza),sev=sevKey(t.severidad),lim=sev?limiteANS(pol,sev):null;
+    const {pol,row}=reglaANS(t.poliza),sev=sevKey(t.severidad),uni=unidadANS(row),lim=sev&&row?limiteANS(pol,sev):null;
     const code=String(t.responsable||'').trim().toUpperCase();const pid=map[code]||('code:'+code);
-    const b={...t,ticket:String(t.ticket),pol,sev,lim,code,pid};
+    const b={...t,ticket:String(t.ticket),pol,sev,lim,uni,code,pid};
     if(lim==null)return {...b,estado:'sinregla'};
-    const vence=venceANS(t.creado,lim);b.vence=vence;
+    const vence=venceANS(t.creado,lim,uni);b.vence=vence;
     if(t.respuesta){const ok=t.respuesta<=vence;return {...b,resp:t.respuesta,exacta:true,estado:ok?'cumple':'vencido',retraso:ok?null:minHabiles(vence,t.respuesta)}}
     const u=ult[b.ticket];
     if(u&&u>=t.creado.slice(0,10)){const vd=vence.slice(0,10);
@@ -1726,7 +1734,7 @@ function ansFiltrados(){
   return ev.filter(x=>{const d=x.creado.slice(0,10);return (!ansF.desde||d>=ansF.desde)&&(!ansF.hasta||d<=ansF.hasta)&&(ansF.colab==='todas'||x.pid===ansF.colab)&&(!ansF.sev||x.sev===ansF.sev)});
 }
 function filaCaso(x){
-  return `<tr><td class="num"><b>${esc(x.ticket)}</b></td><td>${SEV_TXT[x.sev]||esc(x.severidad||'')}</td><td>${esc(x.pol)}</td><td class="r">${x.lim?x.lim+' h':'—'}</td>
+  return `<tr><td class="num"><b>${esc(x.ticket)}</b></td><td>${SEV_TXT[x.sev]||esc(x.severidad||'')}</td><td>${esc(x.pol)}</td><td class="r" style="white-space:nowrap">${fLim(x.lim,x.uni)}</td>
     <td class="num small" style="white-space:nowrap">${fDT(x.creado)}</td><td class="num small" style="white-space:nowrap">${fDT(x.vence)}</td>
     <td class="num small" style="white-space:nowrap">${x.sinResp?'<span class="chip bad">Sin respuesta</span>':fDT(x.resp)}${x.resp&&!x.exacta?' <span class="muted">(sin hora)</span>':''}</td>
     <td class="r" style="white-space:nowrap;color:var(--bad)">${fRetraso(x)}</td></tr>`;
@@ -1778,11 +1786,11 @@ function renderAns(){
     </div>${bloqueClientes(gv,'Casos que no cumplieron, por cliente')}${bloqueClientes(gp,'Por confirmar (la respuesta fue el mismo día del vencimiento)').replace(/chip bad/g,'chip warn')}</div>`}).join('');
   // matriz póliza x severidad
   const pols=[...new Set([...ansLimites().map(r=>polKey(r.poliza)),...xs.map(x=>x.pol)])];
-  document.getElementById('an-matriz-sub').textContent='Casos resueltos a tiempo / casos evaluados en cada combinación. Entre paréntesis, el límite en horas hábiles.';
+  document.getElementById('an-matriz-sub').textContent='Casos resueltos a tiempo / casos evaluados en cada combinación. Entre paréntesis, el límite (horas hábiles o días calendario).';
   document.getElementById('tbl-ans-matriz').innerHTML=`<thead><tr><th>Póliza</th>${SEVS.map(s=>`<th class="r">${SEV_TXT[s]}</th>`).join('')}<th class="r">Total</th></tr></thead><tbody>`+
     pols.map(pl=>{const fx=xs.filter(x=>x.pol===pl);if(!fx.length&&!ansLimites().some(r=>polKey(r.poliza)===pl))return '';
       const celda=arr=>{const a=arr.filter(x=>x.estado==='cumple').length,e=a+arr.filter(x=>x.estado==='vencido').length;return e?`<b>${a}/${e}</b> <span class="muted">${fmtN(a/e*100,0)}%</span>`:(arr.length?`<span class="muted">${arr.length} sin evaluar</span>`:'<span class="muted">—</span>')};
-      return `<tr><td><b>${esc(pl)}</b>${limiteANS(pl,'funcional')==null&&limiteANS(pl,'bloqueante')==null?' <span class="chip na">Sin regla</span>':''}</td>${SEVS.map(s=>{const l=limiteANS(pl,s);return `<td class="r">${celda(fx.filter(x=>x.sev===s))}${l?` <span class="small muted">(${l} h)</span>`:''}</td>`}).join('')}<td class="r">${celda(fx)}</td></tr>`}).join('')+'</tbody>';
+      return `<tr><td><b>${esc(pl)}</b>${limiteANS(pl,'funcional')==null&&limiteANS(pl,'bloqueante')==null?' <span class="chip na">Sin regla</span>':''}</td>${SEVS.map(s=>{const l=limiteANS(pl,s);return `<td class="r">${celda(fx.filter(x=>x.sev===s))}${l?` <span class="small muted">(${fLim(l,unidadANS(reglaANS(pl).row))})</span>`:''}</td>`}).join('')}<td class="r">${celda(fx)}</td></tr>`}).join('')+'</tbody>';
 }
 
 /* --- límites editables --- */
@@ -1791,8 +1799,10 @@ function renderLimAns(){
   if(t.contains(document.activeElement))return;
   if(!ansLimDraft||!ansLimDirty)ansLimDraft=ansLimites().map(r=>({...r}));
   const dis=isAdmin?'':'disabled';
-  t.innerHTML=`<thead><tr><th>Póliza</th>${SEVS.map(s=>`<th class="r">${SEV_TXT[s]} (h)</th>`).join('')}<th></th></tr></thead><tbody>`+
-    ansLimDraft.map((r,i)=>`<tr><td><input type="text" data-lim="${i}" data-f="poliza" value="${esc(r.poliza)}" aria-label="Póliza" style="max-width:140px" ${dis}></td>${SEVS.map(s=>`<td class="r"><input type="number" min="0" step="any" data-lim="${i}" data-f="${s}" value="${r[s]??''}" aria-label="${SEV_TXT[s]}" style="max-width:90px;text-align:right" ${dis}></td>`).join('')}
+  t.innerHTML=`<thead><tr><th>Póliza</th>${SEVS.map(s=>`<th class="r">${SEV_TXT[s]}</th>`).join('')}<th>Se cuenta en</th><th>También aplica a</th><th></th></tr></thead><tbody>`+
+    ansLimDraft.map((r,i)=>`<tr><td><input type="text" data-lim="${i}" data-f="poliza" value="${esc(r.poliza)}" aria-label="Póliza" style="max-width:110px" ${dis}></td>${SEVS.map(s=>`<td class="r"><input type="number" min="0" step="any" data-lim="${i}" data-f="${s}" value="${r[s]??''}" aria-label="${SEV_TXT[s]}" style="max-width:80px;text-align:right" ${dis}></td>`).join('')}
+      <td><select data-lim="${i}" data-f="unidad" aria-label="Unidad" ${dis}><option value="horas" ${unidadANS(r)==='horas'?'selected':''}>Horas hábiles</option><option value="dias" ${unidadANS(r)==='dias'?'selected':''}>Días calendario</option></select></td>
+      <td><input type="text" data-lim="${i}" data-f="alias" value="${esc(r.alias||'')}" placeholder="Ej.: CLIENTE" aria-label="También aplica a" style="max-width:150px" ${dis}></td>
       <td class="r">${isAdmin?`<button class="btn sm danger" type="button" data-lim-rm="${i}">Quitar</button>`:''}</td></tr>`).join('')+'</tbody>';
   document.getElementById('an-lim-add').hidden=!isAdmin;document.getElementById('an-lim-save').hidden=!isAdmin;
 }
@@ -1843,12 +1853,13 @@ function pintarPreviewAns(){
   const fs=filas.map(f=>f.creado).sort();
   const porR={};for(const f of filas)porR[f.responsable]=(porR[f.responsable]||0)+1;
   const porP={};for(const f of filas){const k=polKey(f.poliza);porP[k]=(porP[k]||0)+1}
+  const reglaTxt=p=>{const {pol,row}=reglaANS(p);return row?`<span class="chip ok">Con límites</span>${pol!==p?` <span class="small muted">se toma como ${esc(pol)}</span>`:''}`:'<span class="chip warn">Sin regla</span>'};
   const sinSev=filas.filter(f=>!SEVS.includes(f.severidad)).length;
   pv.hidden=false;
   pv.innerHTML=`<h3 style="font-size:15px;margin-bottom:8px">${esc(nombre)}</h3>
     ${filas.length?`<p class="small" style="margin:0 0 8px"><b>${fmtN(filas.length)}</b> casos creados entre ${fDT(fs[0])} y ${fDT(fs.at(-1))} · ${fmtN(nuevos)} nuevos, ${fmtN(filas.length-nuevos)} ya estaban y se actualizarán${filas.some(f=>f.respuesta)?' · trae fecha de última respuesta':' · sin fecha de última respuesta: se usará la última actividad cargada de cada caso'}.</p>
     <div style="display:flex;gap:18px;flex-wrap:wrap"><div class="tbl-wrap" style="flex:1;min-width:260px"><table><thead><tr><th>Responsable</th><th class="r">Casos</th></tr></thead><tbody>${Object.entries(porR).sort((a,b)=>b[1]-a[1]).map(([c,n])=>`<tr><td>${esc(c||'(vacío)')} ${map[c]?`<span class="small muted">· ${esc(ps[map[c]]?.nombre||'')}</span>`:'<span class="chip warn">Sin asignar</span>'}</td><td class="r">${n}</td></tr>`).join('')}</tbody></table></div>
-    <div class="tbl-wrap" style="flex:1;min-width:260px"><table><thead><tr><th>Póliza</th><th class="r">Casos</th><th>Regla</th></tr></thead><tbody>${Object.entries(porP).sort((a,b)=>b[1]-a[1]).map(([p,n])=>`<tr><td>${esc(p)}</td><td class="r">${n}</td><td>${limiteANS(p,'funcional')!=null||limiteANS(p,'bloqueante')!=null?'<span class="chip ok">Con límites</span>':'<span class="chip warn">Sin regla</span>'}</td></tr>`).join('')}</tbody></table></div></div>
+    <div class="tbl-wrap" style="flex:1;min-width:260px"><table><thead><tr><th>Póliza</th><th class="r">Casos</th><th>Regla</th></tr></thead><tbody>${Object.entries(porP).sort((a,b)=>b[1]-a[1]).map(([p,n])=>`<tr><td>${esc(p)}</td><td class="r">${n}</td><td>${reglaTxt(p)}</td></tr>`).join('')}</tbody></table></div></div>
     ${sinSev?`<p class="small" style="color:var(--warn)">${sinSev} casos tienen una severidad distinta de bloqueante, funcional o presentación y no se evaluarán.</p>`:''}`:''}
     ${errores.length?`<div class="banner warn" style="margin-top:10px;flex-direction:column;align-items:flex-start;gap:4px"><b>${errores.length} ${errores.length===1?'fila no se importará':'filas no se importarán'}:</b>${errores.slice(0,10).map(e=>`<span class="small">Fila ${e.fila}: ${esc(e.txt)}</span>`).join('')}${errores.length>10?`<span class="small">… y ${errores.length-10} más</span>`:''}</div>`:''}
     <div class="form-actions">${filas.length?`<button class="btn primary" type="button" id="an-apply" data-write ${canWrite?'':'disabled'}>Cargar ${fmtN(filas.length)} casos</button>`:''}<button class="btn" type="button" id="an-cancel">Descartar</button></div>`;
@@ -1891,16 +1902,16 @@ document.getElementById('view-ans').addEventListener('click',async e=>{
     try{const n=ansPend.filas.length;await db.doc('tickets/carga').set({filas:ansPend.filas});ansPend=null;ansF.desde='';st.className='status ok';st.textContent=`Listo: ${fmtN(n)} casos cargados.`;toast('Casos cargados');render()}
     catch(err){st.className='status bad';st.textContent=errMsg(err);e.target.disabled=false}return}
   if(e.target.id==='an-borrar'){await twoStep(e.target,async()=>{await db.doc('tickets/todos').delete();ansF.desde=''},'Casos eliminados');return}
-  if(e.target.id==='an-lim-add'){ansLimDirty=true;ansLimDraft.push({poliza:'',bloqueante:'',funcional:'',presentacion:''});document.activeElement?.blur();renderLimAns();return}
+  if(e.target.id==='an-lim-add'){ansLimDirty=true;ansLimDraft.push({poliza:'',unidad:'horas',bloqueante:'',funcional:'',presentacion:'',alias:''});document.activeElement?.blur();renderLimAns();return}
   const rm=e.target.closest('[data-lim-rm]');if(rm){ansLimDirty=true;ansLimDraft.splice(+rm.dataset.limRm,1);document.activeElement?.blur();renderLimAns();return}
   if(e.target.id==='an-lim-save'){const ls=document.getElementById('an-lim-status');ls.className='status';
-    const lista=ansLimDraft.map(r=>({poliza:String(r.poliza||'').trim(),...Object.fromEntries(SEVS.map(s=>[s,r[s]===''||r[s]==null?null:+r[s]]))})).filter(r=>r.poliza);
-    const claves=lista.map(r=>polKey(r.poliza));if(new Set(claves).size!==claves.length){ls.className='status bad';ls.textContent='Hay pólizas repetidas.';return}
-    if(lista.some(r=>SEVS.some(s=>r[s]!=null&&!(r[s]>0)))){ls.className='status bad';ls.textContent='Las horas deben ser mayores que cero (o dejarse vacías).';return}
+    const lista=ansLimDraft.map(r=>({poliza:String(r.poliza||'').trim(),unidad:unidadANS(r),...Object.fromEntries(SEVS.map(s=>[s,r[s]===''||r[s]==null?null:+r[s]])),alias:String(r.alias||'').trim()})).filter(r=>r.poliza);
+    const claves=lista.flatMap(r=>[polKey(r.poliza),...aliasDe(r)]);if(new Set(claves).size!==claves.length){ls.className='status bad';ls.textContent='Hay pólizas repetidas (revisa también la columna “También aplica a”).';return}
+    if(lista.some(r=>SEVS.some(s=>r[s]!=null&&!(r[s]>0)))){ls.className='status bad';ls.textContent='Los límites deben ser mayores que cero (o dejarse vacíos).';return}
     try{ls.textContent='Guardando…';await db.doc('config/general').set({...S.cfg,ansLimites:lista});ansLimDraft=null;ansLimDirty=false;ls.className='status ok';ls.textContent='Límites guardados.';toast('Límites guardados')}
     catch(err){ls.className='status bad';ls.textContent=errMsg(err)}}
 });
-document.getElementById('view-ans').addEventListener('input',e=>{const el=e.target.closest('[data-lim]');if(el&&ansLimDraft){ansLimDirty=true;ansLimDraft[+el.dataset.lim][el.dataset.f]=el.value}});
+['input','change'].forEach(ev=>document.getElementById('view-ans').addEventListener(ev,e=>{const el=e.target.closest('[data-lim]');if(el&&ansLimDraft){ansLimDirty=true;ansLimDraft[+el.dataset.lim][el.dataset.f]=el.value}}));
 
 /* ================= Eventos ================= */
 document.querySelector('nav.tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b)setTab(b.dataset.tab)});
