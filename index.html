@@ -451,7 +451,7 @@ body.pdf-mode #cli-q,body.pdf-mode #cli-more{display:none}
       <p class="help">Importar agrega los casos nuevos y actualiza los que ya estaban, por número de caso. Sirve la consulta de casos tal como sale del CRM.</p>
     </div>
     <div class="panel">
-      <div class="panel-head"><div><h2>Límites por póliza</h2><p>Tiempo máximo para resolver un caso según la póliza del cliente y la severidad. Debajo de cada límite se ve el rango acordado y la mediana del vencimiento que da el CRM. Regla: se usa la mediana del CRM cuando es menor que el máximo acordado; si no, el máximo. D+, Sin póliza y Cliente interno (E) usan la mediana del CRM. Solo las administradoras pueden cambiarlos.</p></div></div>
+      <div class="panel-head"><div><h2>Límites por póliza</h2><p>Tiempo máximo para resolver un caso según la póliza del cliente y la severidad. Debajo de cada límite se ve el rango acordado y la mediana del vencimiento que da el CRM. Regla: se usa la mediana del CRM cuando es menor que el máximo acordado; si no, el máximo. D, D+, Sin póliza y Cliente interno (E) usan la mediana del CRM. Solo las administradoras pueden cambiarlos.</p></div></div>
       <div class="tbl-wrap"><table id="tbl-ans-lim"></table></div>
       <div class="form-actions"><button class="btn" type="button" id="an-lim-add">Agregar póliza</button><button class="btn" type="button" id="an-lim-sug">Usar valores sugeridos</button><button class="btn primary" type="button" id="an-lim-save">Guardar límites</button><span class="status" id="an-lim-status"></span></div>
       <p class="help">La póliza se compara sin las palabras “Póliza” y “Tipo” ni lo que esté entre paréntesis: “PÓLIZA TIPO C (…)” se toma como <b>C</b>, “PÓLIZA TIPO D+” como <b>D+</b> y “SIN PÓLIZA” como <b>SIN POLIZA</b>. En <b>También aplica a</b> escribe otros nombres del CRM que deben usar esa misma regla, separados por comas (por ejemplo, “PÓLIZA CLIENTE” se toma como <b>E</b>). <b>Horas hábiles</b> cuenta solo la jornada (lunes a viernes 8-12 y 2-6, sábado 8-12, sin festivos); <b>Días calendario</b> cuenta todos los días desde la hora de creación. Los casos de pólizas que no estén en esta tabla no se evalúan.</p>
@@ -1675,11 +1675,12 @@ async function descargarInforme(){
 async function guardarArchivo(nombre,buf,mime,msg){const url=URL.createObjectURL(new Blob([buf],{type:mime||'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));const a=document.createElement('a');a.href=url;a.download=nombre;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);toast(msg||'Informe descargado')}
 /* ================= Tiempos de respuesta (ANS por póliza) ================= */
 // Límites aplicados (horas hábiles). Regla acordada: mediana del vencimiento real del CRM (jul-nov 2026) cuando es menor que el
-// máximo del rango acordado; si no, el máximo. D+, Sin póliza y Cliente interno (E) usan la mediana del CRM.
+// máximo del rango acordado; si no, el máximo. D, D+, Sin póliza y Cliente interno (E) usan la mediana del CRM.
 const ANS_DEF=[
   {poliza:'A',unidad:'horas',bloqueante:8,funcional:15.8,presentacion:32,alias:''},
   {poliza:'B',unidad:'horas',bloqueante:13.5,funcional:24,presentacion:45.6,alias:''},
   {poliza:'C',unidad:'horas',bloqueante:16,funcional:33,presentacion:62.5,alias:''},
+  {poliza:'D',unidad:'horas',bloqueante:null,funcional:49.5,presentacion:null,alias:''},
   {poliza:'D+',unidad:'horas',bloqueante:null,funcional:47.6,presentacion:null,alias:''},
   {poliza:'E',unidad:'horas',bloqueante:null,funcional:26,presentacion:47,alias:'CLIENTE, CLIENTE INTERNO'},
   {poliza:'SIN POLIZA',unidad:'horas',bloqueante:34.3,funcional:74,presentacion:null,alias:''}];
@@ -1687,7 +1688,7 @@ const ANS_DEF=[
 const ANS_REF={A:{bloqueante:[4,8,9,23],funcional:[8,16,15.8,90],presentacion:[16,32,33,4]},
   B:{bloqueante:[10,20,13.5,4],funcional:[24,48,24,91],presentacion:[36,60,45.6,2]},
   C:{bloqueante:[12,24,16,119],funcional:[36,60,33,1267],presentacion:[48,96,62.5,9]},
-  'D+':{funcional:[null,null,47.6,10]},E:{funcional:[null,null,26,8],presentacion:[null,null,47,1]},
+  D:{funcional:[null,null,49.5,2]},'D+':{funcional:[null,null,47.6,10]},E:{funcional:[null,null,26,8],presentacion:[null,null,47,1]},
   'SIN POLIZA':{bloqueante:[null,null,34.3,1],funcional:[null,null,74,7]}};
 function refANS(pol,sev){const r=ANS_REF[pol]?.[sev];if(!r)return '';const [a,b,m,n]=r;
   return (a!=null?`Acordado ${fmtN(a)}–${fmtN(b)} h · `:'')+`CRM ${fmtN(m,1)} h (${n} ${n===1?'caso':'casos'})`}
