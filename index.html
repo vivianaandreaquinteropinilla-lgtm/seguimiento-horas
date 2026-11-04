@@ -1717,7 +1717,9 @@ function evaluarCasos(){
     const vence=venceANS(t.creado,lim,uni);b.vence=vence;
     if(t.respuesta){const ok=t.respuesta<=vence;return {...b,resp:t.respuesta,exacta:true,estado:ok?'cumple':'vencido',retraso:ok?null:minHabiles(vence,t.respuesta)}}
     const u=ult[b.ticket];
-    if(u&&u>=t.creado.slice(0,10)){const vd=vence.slice(0,10);
+    // actividades registradas con fecha anterior a la creación del caso (se registró el trabajo con la fecha en que se hizo): resuelto a tiempo
+    if(u&&u<t.creado.slice(0,10))return {...b,resp:u,estado:'cumple',previa:true};
+    if(u){const vd=vence.slice(0,10);
       // el informe de actividades solo trae el día: se decide por fecha y se marca "por confirmar" si cae el mismo día del vencimiento
       if(u<vd||(u===vd&&dtP(vence).m>=finJornada(vd)))return {...b,resp:u,estado:'cumple'};
       if(u>vd)return {...b,resp:u,estado:'vencido',retraso:minHabiles(vence,dtF(u,0)),retrasoMax:minHabiles(vence,dtF(u,finJornada(u)||1080))};
