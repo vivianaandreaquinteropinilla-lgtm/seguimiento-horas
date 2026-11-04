@@ -439,7 +439,7 @@ body.pdf-mode #cli-q,body.pdf-mode #cli-more{display:none}
       </div>
     </div>
     <div class="panel">
-      <div class="panel-head"><div><h2>Importar casos del CRM</h2><p>Excel con las columnas <b>Código</b>, <b>Responsable</b>, <b>Cliente</b>, <b>Severidad</b>, <b>Póliza</b> y <b>Fecha de creación</b> (con hora). Opcional: <b>Fecha última respuesta</b> (con hora); si no viene, se usa la última actividad del caso cargada en “Cargar CRM”.</p></div></div>
+      <div class="panel-head"><div><h2>Importar casos del CRM</h2><p>Excel con las columnas <b>Código</b>, <b>Responsable</b>, <b>Cliente</b>, <b>Severidad</b>, <b>Póliza</b> y <b>Fecha de creación</b> (con hora). Opcional: <b>Fecha última respuesta</b> (con hora); si no viene, se usa la última actividad del caso cargada en “Cargar CRM”. También sirve el archivo que exporta el CRM desde la consulta de tickets (ticket_export): se toman solo esas columnas, los datos de contacto y el detalle del ticket no se guardan. Los casos anulados y los de responsables que no son del equipo no se cargan.</p></div></div>
       <div class="form-actions" style="margin-top:0">
         <button class="btn" type="button" id="an-plantilla">Descargar plantilla</button>
         <label class="btn primary" for="an-file" id="an-file-lbl">Importar Excel…</label>
@@ -451,9 +451,9 @@ body.pdf-mode #cli-q,body.pdf-mode #cli-more{display:none}
       <p class="help">Importar agrega los casos nuevos y actualiza los que ya estaban, por número de caso. Sirve la consulta de casos tal como sale del CRM.</p>
     </div>
     <div class="panel">
-      <div class="panel-head"><div><h2>Límites por póliza</h2><p>Tiempo máximo para resolver un caso según la póliza del cliente y la severidad. Solo las administradoras pueden cambiarlos.</p></div></div>
+      <div class="panel-head"><div><h2>Límites por póliza</h2><p>Tiempo máximo para resolver un caso según la póliza del cliente y la severidad. Debajo de cada límite se ve el rango acordado y la mediana del vencimiento que da el CRM. Regla: se usa la mediana del CRM cuando es menor que el máximo acordado; si no, el máximo. D+, Sin póliza y Cliente interno (E) usan la mediana del CRM. Solo las administradoras pueden cambiarlos.</p></div></div>
       <div class="tbl-wrap"><table id="tbl-ans-lim"></table></div>
-      <div class="form-actions"><button class="btn" type="button" id="an-lim-add">Agregar póliza</button><button class="btn primary" type="button" id="an-lim-save">Guardar límites</button><span class="status" id="an-lim-status"></span></div>
+      <div class="form-actions"><button class="btn" type="button" id="an-lim-add">Agregar póliza</button><button class="btn" type="button" id="an-lim-sug">Usar valores sugeridos</button><button class="btn primary" type="button" id="an-lim-save">Guardar límites</button><span class="status" id="an-lim-status"></span></div>
       <p class="help">La póliza se compara sin las palabras “Póliza” y “Tipo” ni lo que esté entre paréntesis: “PÓLIZA TIPO C (…)” se toma como <b>C</b>, “PÓLIZA TIPO D+” como <b>D+</b> y “SIN PÓLIZA” como <b>SIN POLIZA</b>. En <b>También aplica a</b> escribe otros nombres del CRM que deben usar esa misma regla, separados por comas (por ejemplo, “PÓLIZA CLIENTE” se toma como <b>E</b>). <b>Horas hábiles</b> cuenta solo la jornada (lunes a viernes 8-12 y 2-6, sábado 8-12, sin festivos); <b>Días calendario</b> cuenta todos los días desde la hora de creación. Los casos de pólizas que no estén en esta tabla no se evalúan.</p>
     </div>
   </section>
@@ -1674,8 +1674,23 @@ async function descargarInforme(){
 
 async function guardarArchivo(nombre,buf,mime,msg){const url=URL.createObjectURL(new Blob([buf],{type:mime||'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));const a=document.createElement('a');a.href=url;a.download=nombre;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);toast(msg||'Informe descargado')}
 /* ================= Tiempos de respuesta (ANS por póliza) ================= */
-const ANS_DEF=[{poliza:'A',unidad:'horas',bloqueante:8,funcional:16,presentacion:32,alias:''},{poliza:'B',unidad:'horas',bloqueante:20,funcional:48,presentacion:60,alias:''},
-  {poliza:'C',unidad:'horas',bloqueante:24,funcional:60,presentacion:96,alias:''},{poliza:'E',unidad:'dias',bloqueante:30,funcional:30,presentacion:30,alias:'CLIENTE'}];
+// Límites aplicados (horas hábiles). Regla acordada: mediana del vencimiento real del CRM (jul-nov 2026) cuando es menor que el
+// máximo del rango acordado; si no, el máximo. D+, Sin póliza y Cliente interno (E) usan la mediana del CRM.
+const ANS_DEF=[
+  {poliza:'A',unidad:'horas',bloqueante:8,funcional:15.8,presentacion:32,alias:''},
+  {poliza:'B',unidad:'horas',bloqueante:13.5,funcional:24,presentacion:45.6,alias:''},
+  {poliza:'C',unidad:'horas',bloqueante:16,funcional:33,presentacion:62.5,alias:''},
+  {poliza:'D+',unidad:'horas',bloqueante:null,funcional:47.6,presentacion:null,alias:''},
+  {poliza:'E',unidad:'horas',bloqueante:null,funcional:26,presentacion:47,alias:'CLIENTE, CLIENTE INTERNO'},
+  {poliza:'SIN POLIZA',unidad:'horas',bloqueante:34.3,funcional:74,presentacion:null,alias:''}];
+// Referencia: rango acordado y mediana del CRM [mín, máx, mediana, casos]
+const ANS_REF={A:{bloqueante:[4,8,9,23],funcional:[8,16,15.8,90],presentacion:[16,32,33,4]},
+  B:{bloqueante:[10,20,13.5,4],funcional:[24,48,24,91],presentacion:[36,60,45.6,2]},
+  C:{bloqueante:[12,24,16,119],funcional:[36,60,33,1267],presentacion:[48,96,62.5,9]},
+  'D+':{funcional:[null,null,47.6,10]},E:{funcional:[null,null,26,8],presentacion:[null,null,47,1]},
+  'SIN POLIZA':{bloqueante:[null,null,34.3,1],funcional:[null,null,74,7]}};
+function refANS(pol,sev){const r=ANS_REF[pol]?.[sev];if(!r)return '';const [a,b,m,n]=r;
+  return (a!=null?`Acordado ${fmtN(a)}–${fmtN(b)} h · `:'')+`CRM ${fmtN(m,1)} h (${n} ${n===1?'caso':'casos'})`}
 const SEVS=['bloqueante','funcional','presentacion'];
 const SEV_TXT={bloqueante:'Bloqueante',funcional:'Funcional',presentacion:'Presentación'};
 const ansLimites=()=>Array.isArray(S.cfg.ansLimites)&&S.cfg.ansLimites.length?S.cfg.ansLimites:ANS_DEF;
@@ -1689,7 +1704,7 @@ const aliasDe=r=>String(r.alias||'').split(',').map(x=>x.trim()).filter(Boolean)
 function reglaANS(v){const k=polKey(v);const r=ansLimites().find(x=>polKey(x.poliza)===k)||ansLimites().find(x=>aliasDe(x).includes(k));return {pol:r?polKey(r.poliza):k,row:r||null}}
 function limiteANS(pol,sev){const {row}=reglaANS(pol);const h=row?+row[sev]:NaN;return isFinite(h)&&h>0?h:null}
 const unidadANS=row=>row&&row.unidad==='dias'?'dias':'horas';
-const fLim=(n,u)=>n==null?'—':(u==='dias'?`${fmtN(n)} ${n===1?'día':'días'}`:`${fmtN(n)} h`);
+const fLim=(n,u)=>{if(n==null)return '—';const t=fmtN(n,n%1?1:0);return u==='dias'?`${t} ${n===1?'día':'días'}`:`${t} h`};
 // Jornada hábil: lunes a viernes 8:00-12:00 y 14:00-18:00; sábado 8:00-12:00; sin domingos, festivos ni días no laborables.
 function franjasANS(d){const w=dow(d);if(w===0||esFestivo(d))return [];return w===6?[[480,720]]:[[480,720],[840,1080]]}
 const dtP=s=>({d:String(s).slice(0,10),m:(+String(s).slice(11,13)||0)*60+(+String(s).slice(14,16)||0)});
@@ -1802,17 +1817,17 @@ function renderLimAns(){
   if(!ansLimDraft||!ansLimDirty)ansLimDraft=ansLimites().map(r=>({...r}));
   const dis=isAdmin?'':'disabled';
   t.innerHTML=`<thead><tr><th>Póliza</th>${SEVS.map(s=>`<th class="r">${SEV_TXT[s]}</th>`).join('')}<th>Se cuenta en</th><th>También aplica a</th><th></th></tr></thead><tbody>`+
-    ansLimDraft.map((r,i)=>`<tr><td><input type="text" data-lim="${i}" data-f="poliza" value="${esc(r.poliza)}" aria-label="Póliza" style="max-width:110px" ${dis}></td>${SEVS.map(s=>`<td class="r"><input type="number" min="0" step="any" data-lim="${i}" data-f="${s}" value="${r[s]??''}" aria-label="${SEV_TXT[s]}" style="max-width:80px;text-align:right" ${dis}></td>`).join('')}
+    ansLimDraft.map((r,i)=>`<tr><td><input type="text" data-lim="${i}" data-f="poliza" value="${esc(r.poliza)}" aria-label="Póliza" style="max-width:110px" ${dis}></td>${SEVS.map(s=>`<td class="r"><input type="number" min="0" step="any" data-lim="${i}" data-f="${s}" value="${r[s]??''}" aria-label="${SEV_TXT[s]}" style="max-width:80px;text-align:right" ${dis}>${refANS(polKey(r.poliza),s)?`<div class="small muted" style="margin-top:2px;white-space:nowrap">${refANS(polKey(r.poliza),s)}</div>`:''}</td>`).join('')}
       <td><select data-lim="${i}" data-f="unidad" aria-label="Unidad" ${dis}><option value="horas" ${unidadANS(r)==='horas'?'selected':''}>Horas hábiles</option><option value="dias" ${unidadANS(r)==='dias'?'selected':''}>Días calendario</option></select></td>
       <td><input type="text" data-lim="${i}" data-f="alias" value="${esc(r.alias||'')}" placeholder="Ej.: CLIENTE" aria-label="También aplica a" style="max-width:150px" ${dis}></td>
       <td class="r">${isAdmin?`<button class="btn sm danger" type="button" data-lim-rm="${i}">Quitar</button>`:''}</td></tr>`).join('')+'</tbody>';
-  document.getElementById('an-lim-add').hidden=!isAdmin;document.getElementById('an-lim-save').hidden=!isAdmin;
+  document.getElementById('an-lim-add').hidden=!isAdmin;document.getElementById('an-lim-save').hidden=!isAdmin;document.getElementById('an-lim-sug').hidden=!isAdmin;
 }
 
 /* --- importación --- */
 const HDR_ANS={ticket:['codigo','ticket','caso','numero de caso','no. caso','no caso','numero'],responsable:['responsable','usuario','consultor','codigo consultor'],
   cliente:['cliente','empresa','razon social'],nit:['nit','creada','identificacion'],severidad:['severidad','tipo de caso','tipo caso'],poliza:['poliza','tipo de poliza'],
-  creado:['fecha de creacion','fecha creacion','creacion','fecha de creación'],respuesta:['fecha ultima respuesta','ultima respuesta','fecha de ultima respuesta','fecha de solucion','fecha solucion','fecha de cierre','fecha cierre']};
+  creado:['fecha de creacion','fecha creacion','creacion','fecha de creación','fechacreacion'],producto:['tipo','producto','modulo'],estado:['estado'],respuesta:['fecha ultima respuesta','ultima respuesta','fecha de ultima respuesta','fecha de solucion','fecha solucion','fecha de cierre','fecha cierre']};
 function parseFechaHora(v){
   if(v==null||v==='')return null;
   if(typeof v==='number'){const d=Math.floor(v);let m=Math.round((v-d)*1440);let dd=serialToISO(d);if(m>=1440){m-=1440;dd=add(dd,1)}return dtF(dd,m)}
@@ -1834,23 +1849,26 @@ function leerCasos(buf,nombre){
       for(const [k,al] of Object.entries(HDR_ANS)){const j=r.findIndex(x=>al.includes(x));if(j>=0)c[k]=j}
       if(c.ticket!=null&&c.creado!=null){hi=i;col=c;break}}
     if(hi<0)continue;
-    const filas=[],errores=[];const vistos=new Map();
+    const filas=[],errores=[];const vistos=new Map();const map=codeMap();let anulados=0;const otros={};
     for(let i=hi+1;i<aoa.length;i++){const r=aoa[i]||[];const raw=r[col.ticket];if(raw==null||String(raw).trim()==='')continue;
-      const partes=String(raw).split(' - ');const ticket=String(partes[0]).trim().replace(/\.0+$/,'');const producto=partes.slice(1).join(' - ').trim();
+      const partes=String(raw).split(' - ');const ticket=String(partes[0]).trim().replace(/\.0+$/,'');let producto=partes.slice(1).join(' - ').trim();
+      if(col.estado!=null&&/anulad/i.test(String(r[col.estado]??''))){anulados++;continue}
+      const resp0=col.responsable!=null?String(r[col.responsable]??'').trim().toUpperCase():'';
+      if(resp0&&!map[resp0]){otros[resp0]=(otros[resp0]||0)+1;continue}
       const creado=parseFechaHora(r[col.creado]);const resp=col.respuesta!=null?parseFechaHora(r[col.respuesta]):null;
       if(!/^\d+$/.test(ticket)){errores.push({fila:i+1,txt:`Código de caso no válido: “${raw}”`});continue}
       if(!creado){errores.push({fila:i+1,txt:`Caso ${ticket}: fecha de creación no válida (“${r[col.creado]??''}”)`});continue}
       if(col.respuesta!=null&&r[col.respuesta]!=null&&r[col.respuesta]!==''&&!resp){errores.push({fila:i+1,txt:`Caso ${ticket}: fecha de última respuesta no válida`});continue}
-      const val=k=>col[k]!=null&&r[col[k]]!=null?String(r[col[k]]).trim():'';
+      const val=k=>col[k]!=null&&r[col[k]]!=null?String(r[col[k]]).trim():'';if(!producto)producto=val('producto');
       vistos.set(ticket,{ticket,producto,responsable:val('responsable').toUpperCase(),cliente:val('cliente'),nit:val('nit'),severidad:sevKey(val('severidad'))||val('severidad'),poliza:val('poliza'),creado,respuesta:resp||null});
     }
-    return {filas:[...vistos.values()],errores,hoja:sn};
+    return {filas:[...vistos.values()],errores,hoja:sn,anulados,otros};
   }
   return {filas:[],errores:[],sinHoja:true};
 }
 function pintarPreviewAns(){
   const pv=document.getElementById('an-preview');if(!ansPend){pv.hidden=true;return}
-  const {filas,errores,nombre}=ansPend;const map=codeMap();const ps=Object.fromEntries(personas().map(p=>[p.id,p]));
+  const {filas,errores,nombre,anulados,otros}=ansPend;const nOtros=Object.values(otros||{}).reduce((x,y)=>x+y,0);const map=codeMap();const ps=Object.fromEntries(personas().map(p=>[p.id,p]));
   const ya=new Set((S.tickets||[]).map(t=>String(t.ticket)));const nuevos=filas.filter(f=>!ya.has(f.ticket)).length;
   const fs=filas.map(f=>f.creado).sort();
   const porR={};for(const f of filas)porR[f.responsable]=(porR[f.responsable]||0)+1;
@@ -1863,6 +1881,7 @@ function pintarPreviewAns(){
     <div style="display:flex;gap:18px;flex-wrap:wrap"><div class="tbl-wrap" style="flex:1;min-width:260px"><table><thead><tr><th>Responsable</th><th class="r">Casos</th></tr></thead><tbody>${Object.entries(porR).sort((a,b)=>b[1]-a[1]).map(([c,n])=>`<tr><td>${esc(c||'(vacío)')} ${map[c]?`<span class="small muted">· ${esc(ps[map[c]]?.nombre||'')}</span>`:'<span class="chip warn">Sin asignar</span>'}</td><td class="r">${n}</td></tr>`).join('')}</tbody></table></div>
     <div class="tbl-wrap" style="flex:1;min-width:260px"><table><thead><tr><th>Póliza</th><th class="r">Casos</th><th>Regla</th></tr></thead><tbody>${Object.entries(porP).sort((a,b)=>b[1]-a[1]).map(([p,n])=>`<tr><td>${esc(p)}</td><td class="r">${n}</td><td>${reglaTxt(p)}</td></tr>`).join('')}</tbody></table></div></div>
     ${sinSev?`<p class="small" style="color:var(--warn)">${sinSev} casos tienen una severidad distinta de bloqueante, funcional o presentación y no se evaluarán.</p>`:''}`:''}
+    ${anulados||nOtros?`<p class="small muted" style="margin:8px 0 0">No se cargarán: ${anulados?`${fmtN(anulados)} ${anulados===1?'caso anulado':'casos anulados'}`:''}${anulados&&nOtros?' y ':''}${nOtros?`${fmtN(nOtros)} de responsables que no son del equipo (${Object.entries(otros).sort((a,b)=>b[1]-a[1]).map(([c,n])=>`${esc(c)}: ${n}`).join(', ')})`:''}.</p>`:''}
     ${errores.length?`<div class="banner warn" style="margin-top:10px;flex-direction:column;align-items:flex-start;gap:4px"><b>${errores.length} ${errores.length===1?'fila no se importará':'filas no se importarán'}:</b>${errores.slice(0,10).map(e=>`<span class="small">Fila ${e.fila}: ${esc(e.txt)}</span>`).join('')}${errores.length>10?`<span class="small">… y ${errores.length-10} más</span>`:''}</div>`:''}
     <div class="form-actions">${filas.length?`<button class="btn primary" type="button" id="an-apply" data-write ${canWrite?'':'disabled'}>Cargar ${fmtN(filas.length)} casos</button>`:''}<button class="btn" type="button" id="an-cancel">Descartar</button></div>`;
 }
@@ -1904,6 +1923,7 @@ document.getElementById('view-ans').addEventListener('click',async e=>{
     try{const n=ansPend.filas.length;await db.doc('tickets/carga').set({filas:ansPend.filas});ansPend=null;ansF.desde='';st.className='status ok';st.textContent=`Listo: ${fmtN(n)} casos cargados.`;toast('Casos cargados');render()}
     catch(err){st.className='status bad';st.textContent=errMsg(err);e.target.disabled=false}return}
   if(e.target.id==='an-borrar'){await twoStep(e.target,async()=>{await db.doc('tickets/todos').delete();ansF.desde=''},'Casos eliminados');return}
+  if(e.target.id==='an-lim-sug'){ansLimDirty=true;ansLimDraft=ANS_DEF.map(r=>({...r}));document.activeElement?.blur();renderLimAns();const ls=document.getElementById('an-lim-status');ls.className='status';ls.textContent='Valores sugeridos cargados. Presiona “Guardar límites” para aplicarlos.';return}
   if(e.target.id==='an-lim-add'){ansLimDirty=true;ansLimDraft.push({poliza:'',unidad:'horas',bloqueante:'',funcional:'',presentacion:'',alias:''});document.activeElement?.blur();renderLimAns();return}
   const rm=e.target.closest('[data-lim-rm]');if(rm){ansLimDirty=true;ansLimDraft.splice(+rm.dataset.limRm,1);document.activeElement?.blur();renderLimAns();return}
   if(e.target.id==='an-lim-save'){const ls=document.getElementById('an-lim-status');ls.className='status';
